@@ -1,7 +1,9 @@
 "use strict";
 
+const EventEmitter = require('events');
+
 // Queues up actions to be exectued in FIFO order with a delay
-class Trickle {
+class Trickle extends EventEmitter {
     constructor() {
         this.queue = [];
         this.delay = 1000;
@@ -10,12 +12,16 @@ class Trickle {
 
     add(method) {
         this.queue.push(method);
-        !this.timer && this.run();
+        if (!this.timer) {
+            this.emit('start');
+            this.run();
+        }
     }
 
     run() {
         if (!this.queue.length) {
             this.timer = null;
+            this.emit('done');
             return;
         }
 

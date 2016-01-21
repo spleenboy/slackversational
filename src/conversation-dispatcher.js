@@ -1,28 +1,31 @@
 "use strict";
 
 const EventEmitter = require('events');
+const Storage = require('./storage');
 
 module.exports = class ConversationDispatcher extends EventEmitter {
-    constructor(slack) {
-        this.conversations = {};
+    constructor(slack, storage = null) {
+        this.storage = storage || new Storage();
         this.listen(slack);
     }
 
 
     dispatch(message) {
-        let conversation = this.conversations[message.channel.id];
-        if (!conversation) {
-            conversation = new Conversation(message.channel);
-            conversation.on('end', this.end.bind(this, conversation));
-            this.conversations[message.channel.id] = conversation;
-            this.emit('start', conversation, message);
-        }
-        conversation.process(message);
+        this.storage.findById(message.channel.id)
+        .then((conversation) => {
+            if (!conversation) {
+                conversation = new Conversation(message.channel);
+                conversation.on('end', this.end.bind(this, conversation));
+                this.storage.add(message.channel.id, conversation)
+                .then(() => {this.emit('start', conversation, message)});
+            }
+            conversation.process(message);
+        });
     }
 
 
     end(conversation) {
-        delete this.conversations[conversation.channel.id];
+        this.storage.removeById(conversation.channel.id);
     }
 
 
