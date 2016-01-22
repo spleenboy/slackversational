@@ -1,7 +1,7 @@
 "use strict";
 
 const _ = require('lodash');
-const EventEmitter = require('event');
+const EventEmitter = require('events');
 const Response = require('./response');
 
 module.exports = class Request extends EventEmitter {
