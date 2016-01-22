@@ -5,6 +5,7 @@ const Message = require('./message');
 
 module.exports = class Conversation extends EventEmitter {
     constructor(channel) {
+        super();
         this.channel = channel;
         this.chain = [];
         this.step = 0;

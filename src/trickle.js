@@ -5,6 +5,7 @@ const EventEmitter = require('events');
 // Queues up actions to be exectued in FIFO order with a delay
 class Trickle extends EventEmitter {
     constructor() {
+        super();
         this.queue = [];
         this.delay = 1000;
         this.timer = null;

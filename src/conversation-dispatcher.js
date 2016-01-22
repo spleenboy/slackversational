@@ -5,6 +5,7 @@ const Storage = require('./storage');
 
 module.exports = class ConversationDispatcher extends EventEmitter {
     constructor(slack, storage = null) {
+        super();
         this.storage = storage || new Storage();
         this.exclude = null;
         this.listen(slack);

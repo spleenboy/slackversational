@@ -6,6 +6,8 @@ const Response = require('./response');
 
 module.exports = class Request extends EventEmitter {
     constructor(id = null) {
+        super();
+
         this.id = id || _.uniqueId();
 
         // The number of times this request has been asked.

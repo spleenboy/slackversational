@@ -6,16 +6,17 @@ const watch = require('gulp-watch');
 
 const SRC = 'src/**/*.js';
 const LIB = 'lib';
+const OPTS = {presets:['es2015']};
 
 gulp.task('default', () => {
     return gulp.src(SRC)
-           .pipe(babel())
+           .pipe(babel(OPTS))
            .pipe(gulp.dest(LIB));
 });
 
 gulp.task('watch', () => {
     return gulp.src(SRC)
            .pipe(watch(SRC))
-           .pipe(babel())
+           .pipe(babel(OPTS))
            .pipe(gulp.dest(LIB));
 });
