@@ -5,7 +5,7 @@ const babel = require('gulp-babel');
 const watch = require('gulp-watch');
 
 const SRC = 'src/**/*.js';
-const LIB = 'lib';
+const LIB = 'dist';
 const OPTS = {presets:['es2015']};
 
 gulp.task('default', () => {
