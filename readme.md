@@ -11,14 +11,14 @@ const dispatcher = new ConversationDispatcher(slack);
 dispatcher.on('start', (conversation, message) => {
     // Initialize the conversation based on the message received
     const getName = new Request("getName");
-    getName.questions = ["What is its name?"];
-    getName.responses = [(message) => `${message.text} is a good name.`];
+    getName.questions = ["What do you want?"];
+    getName.responses = [(message) => `I see you want ${message.text}.`];
     getName.on('valid', (response) => {
         save(response.value);
-        conversation.chain.next();
+        conversation.nextRequest();
         conversation.process(response);
     });
-    conversation.chain.add(getName);
+    conversation.addRequest(getName);
 
     const getWhen = new Request("getWhen");
     getWhen.questions = ["When do you want it?"];
@@ -31,6 +31,6 @@ dispatcher.on('start', (conversation, message) => {
         save(response.value);
         conversation.end();
     });
-    conversation.chain.add(getDesc);
+    conversation.addRequest(getDesc);
 });
 ```

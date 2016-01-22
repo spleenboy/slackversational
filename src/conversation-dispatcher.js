@@ -6,16 +6,21 @@ const Storage = require('./storage');
 module.exports = class ConversationDispatcher extends EventEmitter {
     constructor(slack, storage = null) {
         this.storage = storage || new Storage();
+        this.exclude = null;
         this.listen(slack);
     }
 
 
     dispatch(message) {
+        if (this.exclude && this.exclude(message)) {
+            return;
+        }
+
         this.storage.findById(message.channel.id)
         .then((conversation) => {
             if (!conversation) {
                 conversation = new Conversation(message.channel);
-                conversation.on('end', this.end.bind(this, conversation));
+                conversation.on('end', this.ended.bind(this, conversation));
                 this.storage.add(message.channel.id, conversation)
                 .then(() => {this.emit('start', conversation, message)});
             }
@@ -24,7 +29,7 @@ module.exports = class ConversationDispatcher extends EventEmitter {
     }
 
 
-    end(conversation) {
+    ended(conversation) {
         this.storage.removeById(conversation.channel.id);
     }
 
