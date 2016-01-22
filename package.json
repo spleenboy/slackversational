@@ -2,7 +2,7 @@
   "name": "me-talk-slack",
   "version": "1.0.0",
   "description": "A utility module for conversations over slack-client",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
