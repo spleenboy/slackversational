@@ -41,8 +41,11 @@ module.exports = class Message {
         const values = statements.map((statement) => {
             return _.isFunction(statement) ? statement(this) : statement;
         });
+
         if (values) {
-            this.output = values.concat(this.output);
+            values.forEach((value) => {
+                this.output.push(value);
+            });
         }
         return values;
     }

@@ -36,8 +36,11 @@ module.exports = function () {
             var values = statements.map(function (statement) {
                 return _.isFunction(statement) ? statement(_this) : statement;
             });
+
             if (values) {
-                this.output = values.concat(this.output);
+                values.forEach(function (value) {
+                    _this.output.push(value);
+                });
             }
             return values;
         }
