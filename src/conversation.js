@@ -1,34 +1,52 @@
 "use strict";
 
 const EventEmitter = require('events');
-const Message = require('./message');
+const _ = require('lodash');
+const Typist = require('./typist');
+const Trickle = require('./trickle');
 
 module.exports = class Conversation extends EventEmitter {
-    constructor(channel) {
+    constructor(id) {
         super();
-        this.channel = channel;
+        this.id = id || _.uniqueId();
         this.chain = [];
         this.step = 0;
+        this.trickle = new Trickle();
     }
 
     static get emits() {
         return ['reading', 'asking', 'saying'];
     }
 
+    say(channel, statements) {
+        const typist = new Typist(statements, this.trickle);
+        typist.send(channel);
+    }
+
     process(message) {
-        const request = this.chain.current();
-        let response = null;
+        const request = this.currentRequest();
+
+        if (!request) {
+            this.emit('error', 'No current request');
+            return;
+        }
+
         if (request.asked) {
             this.emit('reading', request, message);
-            response = request.read(message);
+            request.read(message);
         } else {
             this.emit('asking', request, message);
-            response = request.ask(message);
+            request.ask(message);
         }
-        if (response.output) {
-            this.emit('saying', response.output);
-            const message = new Message(response.output);
-            message.send(this.channel);
+        if (message.output) {
+            this.emit('saying', request, message);
+            this.say(message.channel, message.output);
+        }
+
+        // If the request has changed, process the new one, too
+        const newRequest = this.currentRequest();
+        if (newRequest && request.id !== newRequest.id) {
+            this.process(message);
         }
     }
 

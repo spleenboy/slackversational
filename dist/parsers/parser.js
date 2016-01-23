@@ -16,8 +16,8 @@ module.exports = function () {
         }
     }, {
         key: "apply",
-        value: function apply(response, context) {
-            response.value = this.parse(response.value);
+        value: function apply(message) {
+            message.value = this.parse(message.value);
         }
     }, {
         key: "hasWord",

@@ -1,29 +1,49 @@
-"use strict"
+"use strict";
 
-const Trickle = require('./trickle');
+const _ = require('lodash');
 
 module.exports = class Message {
-    constructor(statements, queue = null) {
-        this.statements = statements || [];
-        this.queue = queue || new Trickle();
-        this.queue.on('done', this.clear.bind(this));
+    constructor(input, slack) {
+        // The original input
+        this.input = input;
+
+        // The slack client
+        this.slack = slack;
+
+        // The parsed value culled from the input
+        this.value = input && input.text;
+
+        // Whether the input was valid
+        this.valid = true;
+
+        // The statements to use as a response
+        this.output = [];
     }
 
-    concat(statements) {
-        this.statements = this.statements.concat(statements);
+    get channel() {
+        if (!this._channel) {
+            this._channel = this.slack.getChannelGroupOrDMByID(this.input.channel);
+        }
+        return this._channel;
     }
 
-    add(statement) {
-        this.statements.push(statement);
+    get user() {
+        if (!this._user) {
+            this._user = this.slack.getUserByID(this.input.user);
+        }
+        return this._user;
     }
 
-    clear() {
-        this.statements = [];
-    }
 
-    send(channel) {
-        this.statements.forEach((statement) => {
-            this.queue.add(channel.send.bind(channel, statement));
+    write(pool) {
+        const choice = _.sample(pool);
+        const statements = _.isArray(choice) ? choice : [choice];
+        const values = statements.map((statement) => {
+            return _.isFunction(statement) ? statement(this) : statement;
         });
+        if (values) {
+            this.output = values.concat(this.output);
+        }
+        return values;
     }
 }

@@ -1,5 +1,8 @@
 "use strict";
 
+const moment = require('moment');
+const Parser = require('./parser');
+
 module.exports = class FutureDate extends Parser {
     parse(value) {
         const check = /((\d+) (second|minute|min|hour|day)s?)/gi;

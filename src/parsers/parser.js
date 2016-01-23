@@ -5,8 +5,8 @@ module.exports = class Parser {
         return value;
     }
 
-    apply(response, context) {
-        response.value = this.parse(response.value);
+    apply(message) {
+        message.value = this.parse(message.value);
     }
 
 

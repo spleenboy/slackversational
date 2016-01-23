@@ -7,14 +7,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _ = require('lodash');
 
 module.exports = function () {
-    function Response(input) {
-        _classCallCheck(this, Response);
+    function Message(input) {
+        _classCallCheck(this, Message);
 
         // The original input
         this.input = input;
 
         // The parsed value culled from the input
-        this.value = input;
+        this.value = input && input.text;
 
         // Whether the input was valid
         this.valid = true;
@@ -23,20 +23,22 @@ module.exports = function () {
         this.output = [];
     }
 
-    _createClass(Response, [{
-        key: "say",
-        value: function say(pool, context) {
+    _createClass(Message, [{
+        key: "write",
+        value: function write(pool) {
+            var _this = this;
+
             var choice = _.sample(pool);
             var statements = _.isArray(choice) ? question : [choice];
             var values = statements.map(function (statement) {
-                return _.isFunction(statement) ? statement(context) : statement;
+                return _.isFunction(statement) ? statement(_this) : statement;
             });
             if (values) {
-                this.output = this.output.concat(values);
+                this.output = values.concat(this.output);
             }
             return values;
         }
     }]);
 
-    return Response;
+    return Message;
 }();

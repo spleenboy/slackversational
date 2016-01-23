@@ -1,6 +1,6 @@
 "use strict";
 
-export default {
+module.exports = {
     Validator: require('./validator'),
     Required: require('./required'),
 };

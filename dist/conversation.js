@@ -9,38 +9,57 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var EventEmitter = require('events');
-var Message = require('./message');
+var _ = require('lodash');
+var Typist = require('./typist');
+var Trickle = require('./trickle');
 
 module.exports = function (_EventEmitter) {
     _inherits(Conversation, _EventEmitter);
 
-    function Conversation(channel) {
+    function Conversation(id) {
         _classCallCheck(this, Conversation);
 
         var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Conversation).call(this));
 
-        _this.channel = channel;
+        _this.id = id || _.uniqueId();
         _this.chain = [];
         _this.step = 0;
+        _this.trickle = new Trickle();
         return _this;
     }
 
     _createClass(Conversation, [{
+        key: 'say',
+        value: function say(channel, statements) {
+            var typist = new Typist(statements, this.trickle);
+            typist.send(channel);
+        }
+    }, {
         key: 'process',
         value: function process(message) {
-            var request = this.chain.current();
-            var response = null;
+            var request = this.currentRequest();
+
+            if (!request) {
+                this.emit('error', 'No current request');
+                return;
+            }
+
             if (request.asked) {
                 this.emit('reading', request, message);
-                response = request.read(message);
+                request.read(message);
             } else {
                 this.emit('asking', request, message);
-                response = request.ask(message);
+                request.ask(message);
             }
-            if (response.output) {
-                this.emit('saying', response.output);
-                var _message = new Message(response.output);
-                _message.send(this.channel);
+            if (message.output) {
+                this.emit('saying', request, message);
+                this.say(message.channel, message.output);
+            }
+
+            // If the request has changed, process the new one, too
+            var newRequest = this.currentRequest();
+            if (newRequest && request.id !== newRequest.id) {
+                this.process(message);
             }
         }
     }, {

@@ -10,16 +10,18 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var EventEmitter = require('events');
 var Storage = require('./storage');
+var Conversation = require('./conversation');
+var Message = require('./message');
 
 module.exports = function (_EventEmitter) {
-    _inherits(ConversationDispatcher, _EventEmitter);
+    _inherits(Dispatcher, _EventEmitter);
 
-    function ConversationDispatcher(slack) {
+    function Dispatcher(slack) {
         var storage = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
 
-        _classCallCheck(this, ConversationDispatcher);
+        _classCallCheck(this, Dispatcher);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ConversationDispatcher).call(this));
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Dispatcher).call(this));
 
         _this.storage = storage || new Storage();
         _this.exclude = null;
@@ -27,44 +29,57 @@ module.exports = function (_EventEmitter) {
         return _this;
     }
 
-    _createClass(ConversationDispatcher, [{
+    _createClass(Dispatcher, [{
         key: 'dispatch',
         value: function dispatch(message) {
             var _this2 = this;
 
             if (this.exclude && this.exclude(message)) {
+                this.emit('excluded', message);
                 return;
             }
 
-            this.storage.findById(message.channel.id).then(function (conversation) {
-                if (!conversation) {
-                    conversation = new Conversation(message.channel);
-                    conversation.on('end', _this2.ended.bind(_this2, conversation));
-                    _this2.storage.add(message.channel.id, conversation).then(function () {
-                        _this2.emit('start', conversation, message);
-                    });
+            this.storage.findById(message.input.channel).then(function (conversation) {
+                if (conversation) {
+                    conversation.process(message);
+                } else {
+                    _this2.start(message);
                 }
-                conversation.process(message);
+            });
+        }
+    }, {
+        key: 'start',
+        value: function start(message) {
+            var _this3 = this;
+
+            var conversation = new Conversation(message.input.channel);
+
+            this.storage.add(conversation.id, conversation).then(function () {
+                conversation.on('end', _this3.ended.bind(_this3, conversation));
+                _this3.emit('start', conversation, message);
             });
         }
     }, {
         key: 'ended',
         value: function ended(conversation) {
-            this.storage.removeById(conversation.channel.id);
+            this.storage.removeById(conversation.id);
         }
     }, {
         key: 'listen',
         value: function listen(slack) {
-            var _this3 = this;
+            var _this4 = this;
 
             this.slack = slack;
-            this.slack.on('message', function (message) {
-                message.channel = _this3.slack.getChannelGroupOrDMByID(message.channel);
-                message.user = _this3.slack.getUserByID(message.user);
-                _this3.dispatch(message);
+            slack.on('message', function (input) {
+                try {
+                    var message = new Message(input, slack);
+                    _this4.dispatch(message);
+                } catch (e) {
+                    console.error("Error dispatching message", e);
+                }
             });
         }
     }]);
 
-    return ConversationDispatcher;
+    return Dispatcher;
 }(EventEmitter);

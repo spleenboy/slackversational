@@ -1,5 +1,7 @@
 "use strict";
 
+const Parser = require('./parser');
+
 module.exports = class FutureDate extends Parser {
     parse(value) {
         const check = /<#(C[a-zA-Z0-9]+)(\||>)/;

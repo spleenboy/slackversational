@@ -14,15 +14,17 @@ module.exports = function () {
     }
 
     _createClass(Validator, [{
-        key: "validate",
-        value: function validate(value) {
+        key: "isValid",
+        value: function isValid(value) {
             return true;
         }
     }, {
         key: "apply",
-        value: function apply(response, context) {
-            if (!this.validate(response.value)) {
-                response.say(this.messages, context);
+        value: function apply(response) {
+            if (!this.isValid(response.value) && this.messages) {
+                console.log("Invalid response value", response.value);
+                response.write(this.messages);
+                response.valid = false;
             }
         }
     }]);

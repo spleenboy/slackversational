@@ -1,5 +1,7 @@
 "use strict";
 
+const Parser = require('./parser');
+
 module.exports = class Currency extends Parser {
     parse(value) {
         if (this.hasAnyWord(value, ['free', 'nothing'])) {

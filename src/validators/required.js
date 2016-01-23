@@ -1,9 +1,10 @@
 "use strict";
 
 const Validator = require('./validator');
+const _ = require('lodash');
 
-export default class Required extends Validator {
-    validate(response) {
-        return response.value.length > 0;
+module.exports = class Required extends Validator {
+    isValid(value) {
+        return _.toString(value).length > 0;
     }
 }

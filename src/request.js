@@ -2,7 +2,6 @@
 
 const _ = require('lodash');
 const EventEmitter = require('events');
-const Response = require('./response');
 
 module.exports = class Request extends EventEmitter {
     constructor(id = null) {
@@ -31,39 +30,39 @@ module.exports = class Request extends EventEmitter {
 
     // Returns an array of string statements, pulled randomly from
     // the available questions. This is usually step #1 in processing a request.
-    ask(input) {
+    ask(message) {
 
-        const response = new Response(input);
-        response.say(this.questions, input);
+        message.write(this.questions);
         this.asked++;
 
-        this.emit('asking', response);
+        this.emit('asking', message);
 
-        return response;
+        return message;
     }
 
     // Reads and processes input. Returns a Response object.
     // Typically step #2, after a request has been asked.
     // This part of the request involves parsing and validating
     // the input through one or more processors.
-    read(input) {
+    read(message) {
 
-        const response = new Response(input);
         this.processors.forEach(process => {
-            process.apply(response, input);
+            try {
+                process.apply(message);
+            } catch (e) {
+                console.error("Processor error", e, process);
+            }
         });
 
-        if (response.valid && this.responses) {
-            response.say(this.responses, input);
-        }
-
-        if (response.valid) {
-            this.emit('valid', response);
+        if (message.valid) {
+            this.emit('valid', message);
+            this.responses && message.write(this.responses);
         } else {
-            this.emit('invalid', response);
+            // Ask again!
+            this.emit('invalid', message);
+            return this.ask(message);
         }
 
-        this.emit('responding', response);
-        return response;
+        return message;
     }
 }

@@ -1,6 +1,6 @@
 "use strict";
 
-export default class Storage {
+module.exports = class Storage {
     constructor() {
         this.buckets = {};
     }

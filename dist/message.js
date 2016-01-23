@@ -4,42 +4,58 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Trickle = require('./trickle');
+var _ = require('lodash');
 
 module.exports = function () {
-    function Message(statements) {
-        var queue = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
-
+    function Message(input, slack) {
         _classCallCheck(this, Message);
 
-        this.statements = statements || [];
-        this.queue = queue || new Trickle();
-        this.queue.on('done', this.clear.bind(this));
+        // The original input
+        this.input = input;
+
+        // The slack client
+        this.slack = slack;
+
+        // The parsed value culled from the input
+        this.value = input && input.text;
+
+        // Whether the input was valid
+        this.valid = true;
+
+        // The statements to use as a response
+        this.output = [];
     }
 
     _createClass(Message, [{
-        key: 'concat',
-        value: function concat(statements) {
-            this.statements = this.statements.concat(statements);
-        }
-    }, {
-        key: 'add',
-        value: function add(statement) {
-            this.statements.push(statement);
-        }
-    }, {
-        key: 'clear',
-        value: function clear() {
-            this.statements = [];
-        }
-    }, {
-        key: 'send',
-        value: function send(channel) {
+        key: "write",
+        value: function write(pool) {
             var _this = this;
 
-            this.statements.forEach(function (statement) {
-                _this.queue.add(channel.send.bind(channel, statement));
+            var choice = _.sample(pool);
+            var statements = _.isArray(choice) ? choice : [choice];
+            var values = statements.map(function (statement) {
+                return _.isFunction(statement) ? statement(_this) : statement;
             });
+            if (values) {
+                this.output = values.concat(this.output);
+            }
+            return values;
+        }
+    }, {
+        key: "channel",
+        get: function get() {
+            if (!this._channel) {
+                this._channel = this.slack.getChannelGroupOrDMByID(this.input.channel);
+            }
+            return this._channel;
+        }
+    }, {
+        key: "user",
+        get: function get() {
+            if (!this._user) {
+                this._user = this.slack.getUserByID(this.input.user);
+            }
+            return this._user;
         }
     }]);
 

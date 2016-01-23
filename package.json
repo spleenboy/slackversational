@@ -4,6 +4,7 @@
   "description": "A utility module for conversations over slack-client",
   "main": "dist/index.js",
   "scripts": {
+    "start": "node example/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,7 +22,8 @@
   },
   "homepage": "https://github.com/spleenboy/me-talk-slack#readme",
   "dependencies": {
-    "lodash": "^4.0.0"
+    "lodash": "^4.0.0",
+    "moment": "^2.11.1"
   },
   "devDependencies": {
     "babel-polyfill": "^6.3.14",
@@ -29,6 +31,7 @@
     "del": "^2.2.0",
     "gulp": "^3.9.0",
     "gulp-babel": "^6.1.1",
+    "gulp-eslint": "^1.1.1",
     "gulp-watch": "^4.3.5",
     "vinyl-paths": "^2.1.0"
   },

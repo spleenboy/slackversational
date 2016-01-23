@@ -2,7 +2,7 @@
 
 module.exports = {
     Conversation: require('./conversation'),
-    ConversationDispatcher: require('./conversation-dispatcher'),
+    Dispatcher: require('./dispatcher'),
     Message: require('./message'),
     Request: require('./request'),
     Response: require('./response'),
