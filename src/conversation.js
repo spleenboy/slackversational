@@ -19,6 +19,9 @@ module.exports = class Conversation extends EventEmitter {
     }
 
     say(channel, statements) {
+        if (!_.isArray(statements)) {
+            statements = [statements];
+        }
         const typist = new Typist(statements, this.trickle);
         typist.send(channel);
     }

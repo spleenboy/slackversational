@@ -31,6 +31,9 @@ module.exports = function (_EventEmitter) {
     _createClass(Conversation, [{
         key: 'say',
         value: function say(channel, statements) {
+            if (!_.isArray(statements)) {
+                statements = [statements];
+            }
             var typist = new Typist(statements, this.trickle);
             typist.send(channel);
         }
