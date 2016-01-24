@@ -30,12 +30,17 @@ module.exports = class Dispatcher extends EventEmitter {
         });
     }
 
-    start(message) {
+    create(message) {
         const conversation = new Conversation(message.input.channel);
+        conversation.on('end', this.ended.bind(this, conversation));
+        return conversation;
+    }
+
+    start(message) {
+        const conversation = this.create(message);
 
         this.storage.add(conversation.id, conversation)
         .then(() => {
-            conversation.on('end', this.ended.bind(this, conversation));
             this.emit('start', conversation, message)
         });
     }
