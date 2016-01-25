@@ -40,11 +40,10 @@ module.exports = function (_EventEmitter) {
             }
 
             this.storage.findById(exchange.input.channel).then(function (conversation) {
-                if (conversation) {
-                    conversation.process(exchange);
-                } else {
+                if (!conversation) {
                     _this2.start(exchange);
                 }
+                conversation.process(exchange);
             });
         }
     }, {

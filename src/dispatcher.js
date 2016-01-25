@@ -22,11 +22,10 @@ module.exports = class Dispatcher extends EventEmitter {
 
         this.storage.findById(exchange.input.channel)
         .then((conversation) => {
-            if (conversation) {
-                conversation.process(exchange);
-            } else {
+            if (!conversation) {
                 this.start(exchange);
             }
+            conversation.process(exchange);
         });
     }
 

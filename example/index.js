@@ -46,14 +46,6 @@ dispatcher.on('start', (conversation, message) => {
     conversation.on('saying', (request, msg) => {
         console.log("saying", msg.output);
     });
-
-    console.log("Processing first message");
-    try {
-        conversation.process(message);
-    }
-    catch (e) {
-        console.error(e);
-    }
 });
 
 slack.login();
