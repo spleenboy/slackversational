@@ -5,8 +5,9 @@ module.exports = {
     Dispatcher: require('./dispatcher'),
     Exchange: require('./exchange'),
     Request: require('./request'),
-    Response: require('./response'),
+    Storage: require('./storage'),
     Trickle: require('./trickle'),
+    Typist: require('./typist'),
     Parsers: require('./parsers/'),
     Validators: require('./validators/'),
 };

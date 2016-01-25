@@ -40,6 +40,8 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'process',
         value: function process(exchange) {
+            var _this2 = this;
+
             var request = this.currentRequest();
 
             if (!request) {
@@ -47,23 +49,28 @@ module.exports = function (_EventEmitter) {
                 return;
             }
 
+            var promise = undefined;
+
             if (request.asked) {
                 this.emit('reading', request, exchange);
-                request.read(exchange);
+                promise = request.read(exchange);
             } else {
                 this.emit('asking', request, exchange);
-                request.ask(exchange);
-            }
-            if (exchange.output) {
-                this.emit('saying', request, exchange);
-                this.say(exchange.channel, exchange.output);
+                promise = request.ask(exchange);
             }
 
-            // If the request has changed, process the new one, too
-            var newRequest = this.currentRequest();
-            if (newRequest && request.id !== newRequest.id) {
-                this.process(exchange);
-            }
+            promise.then(function (exchange) {
+                if (exchange.output) {
+                    _this2.emit('saying', request, exchange);
+                    _this2.say(exchange.channel, exchange.output);
+                }
+
+                // If the request has changed, process the new one, too
+                var newRequest = _this2.currentRequest();
+                if (newRequest && request.id !== newRequest.id) {
+                    _this2.process(exchange);
+                }
+            });
         }
     }, {
         key: 'end',
@@ -78,7 +85,7 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'setRequest',
         value: function setRequest(test) {
-            var _this2 = this;
+            var _this3 = this;
 
             if (_.isInteger(test)) {
                 this.step = _.clamp(test, 0, this.chain.length = 1);
@@ -86,7 +93,7 @@ module.exports = function (_EventEmitter) {
             }
             this.chain.some(function (request, i) {
                 if (test(request)) {
-                    _this2.step = i;
+                    _this3.step = i;
                     return true;
                 }
                 return false;

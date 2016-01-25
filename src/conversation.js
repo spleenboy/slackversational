@@ -34,23 +34,28 @@ module.exports = class Conversation extends EventEmitter {
             return;
         }
 
+        let promise;
+
         if (request.asked) {
             this.emit('reading', request, exchange);
-            request.read(exchange);
+            promise = request.read(exchange);
         } else {
             this.emit('asking', request, exchange);
-            request.ask(exchange);
-        }
-        if (exchange.output) {
-            this.emit('saying', request, exchange);
-            this.say(exchange.channel, exchange.output);
+            promise = request.ask(exchange);
         }
 
-        // If the request has changed, process the new one, too
-        const newRequest = this.currentRequest();
-        if (newRequest && request.id !== newRequest.id) {
-            this.process(exchange);
-        }
+        promise.then((exchange) => {
+            if (exchange.output) {
+                this.emit('saying', request, exchange);
+                this.say(exchange.channel, exchange.output);
+            }
+
+            // If the request has changed, process the new one, too
+            const newRequest = this.currentRequest();
+            if (newRequest && request.id !== newRequest.id) {
+                this.process(exchange);
+            }
+        });
     }
 
 

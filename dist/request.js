@@ -38,18 +38,37 @@ module.exports = function (_EventEmitter) {
     }
 
     _createClass(Request, [{
-        key: 'ask',
+        key: 'getQuestions',
+        value: function getQuestions(exchange) {
+            var _this2 = this;
+
+            return new Promise(function (resolve, reject) {
+                resolve(_this2.questions);
+            });
+        }
+    }, {
+        key: 'getResponses',
+        value: function getResponses(exchange) {
+            var _this3 = this;
+
+            return new Promise(function (resolve, reject) {
+                resolve(exchange.valid ? _this3.responses : []);
+            });
+        }
 
         // Returns an array of string statements, pulled randomly from
         // the available questions. This is usually step #1 in processing a request.
+
+    }, {
+        key: 'ask',
         value: function ask(exchange) {
+            var _this4 = this;
 
-            exchange.write(this.questions);
-            this.asked++;
-
-            this.emit('asking', exchange);
-
-            return exchange;
+            return this.getQuestions(exchange).then(function (questions) {
+                exchange.write(questions);
+                _this4.asked++;
+                return exchange;
+            });
         }
 
         // Reads and processes input. Returns a Response object.
@@ -60,6 +79,7 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'read',
         value: function read(exchange) {
+            var _this5 = this;
 
             this.processors.forEach(function (process) {
                 try {
@@ -69,21 +89,24 @@ module.exports = function (_EventEmitter) {
                 }
             });
 
-            if (exchange.valid) {
-                this.emit('valid', exchange);
-                this.responses && exchange.write(this.responses);
-            } else {
-                // Ask again!
-                this.emit('invalid', exchange);
-                return this.ask(exchange);
-            }
+            this.emit(exchange.valid ? 'valid' : 'invalid', exchange);
 
-            return exchange;
+            return this.getResponses(exchange).then(function (responses) {
+                if (responses) {
+                    exchange.write(responses);
+                }
+
+                if (!exchange.valid) {
+                    _this5.ask(exchange);
+                }
+
+                return exchange;
+            });
         }
     }], [{
         key: 'emits',
         get: function get() {
-            return ['asking', 'valid', 'invalid', 'responding'];
+            return ['valid', 'invalid'];
         }
     }]);
 

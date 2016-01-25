@@ -24,20 +24,33 @@ module.exports = class Request extends EventEmitter {
 
 
     static get emits() {
-        return ['asking', 'valid', 'invalid', 'responding'];
+        return ['valid', 'invalid'];
+    }
+
+
+    getQuestions(exchange) {
+        return new Promise((resolve, reject) => {
+            resolve(this.questions);
+        });
+    }
+
+
+    getResponses(exchange) {
+        return new Promise((resolve, reject) => {
+            resolve(exchange.valid ? this.responses : []);
+        });
     }
 
 
     // Returns an array of string statements, pulled randomly from
     // the available questions. This is usually step #1 in processing a request.
     ask(exchange) {
-
-        exchange.write(this.questions);
-        this.asked++;
-
-        this.emit('asking', exchange);
-
-        return exchange;
+        return this.getQuestions(exchange)
+        .then((questions) => {
+            exchange.write(questions);
+            this.asked++;
+            return exchange;
+        });
     }
 
     // Reads and processes input. Returns a Response object.
@@ -45,7 +58,6 @@ module.exports = class Request extends EventEmitter {
     // This part of the request involves parsing and validating
     // the input through one or more processors.
     read(exchange) {
-
         this.processors.forEach(process => {
             try {
                 process.apply(exchange);
@@ -54,15 +66,19 @@ module.exports = class Request extends EventEmitter {
             }
         });
 
-        if (exchange.valid) {
-            this.emit('valid', exchange);
-            this.responses && exchange.write(this.responses);
-        } else {
-            // Ask again!
-            this.emit('invalid', exchange);
-            return this.ask(exchange);
-        }
+        this.emit(exchange.valid ? 'valid' : 'invalid', exchange);
 
-        return exchange;
+        return this.getResponses(exchange)
+        .then((responses) => {
+            if (responses) {
+                exchange.write(responses);
+            }
+
+            if (!exchange.valid) {
+                this.ask(exchange);
+            }
+
+            return exchange;
+        });
     }
 }

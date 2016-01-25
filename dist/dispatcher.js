@@ -41,27 +41,35 @@ module.exports = function (_EventEmitter) {
 
             this.storage.findById(exchange.input.channel).then(function (conversation) {
                 if (!conversation) {
-                    _this2.start(exchange);
+                    _this2.start(exchange).then(function (conversation) {
+                        conversation.process(exchange);
+                    });
+                } else {
+                    conversation.process(exchange);
                 }
-                conversation.process(exchange);
             });
         }
     }, {
         key: 'create',
         value: function create(exchange) {
-            var conversation = new Conversation(exchange.input.channel);
-            conversation.on('end', this.ended.bind(this, conversation));
-            return conversation;
+            var _this3 = this;
+
+            return new Promise(function (resolve, reject) {
+                var conversation = new Conversation(exchange.input.channel);
+                conversation.on('end', _this3.ended.bind(_this3, conversation));
+                resolve(conversation);
+            });
         }
     }, {
         key: 'start',
         value: function start(exchange) {
-            var _this3 = this;
+            var _this4 = this;
 
-            var conversation = this.create(exchange);
-
-            this.storage.add(conversation.id, conversation).then(function () {
-                _this3.emit('start', conversation, exchange);
+            this.create(exchange).then(function (conversation) {
+                return _this4.storage.add(conversation.id, conversation).then(function () {
+                    _this4.emit('start', conversation, exchange);
+                    return conversation;
+                });
             });
         }
     }, {
@@ -72,13 +80,13 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'listen',
         value: function listen(slack) {
-            var _this4 = this;
+            var _this5 = this;
 
             this.slack = slack;
             slack.on('exchange', function (input) {
                 try {
                     var exchange = new Exchange(input, slack);
-                    _this4.dispatch(exchange);
+                    _this5.dispatch(exchange);
                 } catch (e) {
                     console.error("Error dispatching exchange", e);
                 }

@@ -23,24 +23,30 @@ module.exports = class Dispatcher extends EventEmitter {
         this.storage.findById(exchange.input.channel)
         .then((conversation) => {
             if (!conversation) {
-                this.start(exchange);
+                this.start(exchange).then((conversation) => {
+                    conversation.process(exchange);
+                });
+            } else {
+                conversation.process(exchange);
             }
-            conversation.process(exchange);
         });
     }
 
     create(exchange) {
-        const conversation = new Conversation(exchange.input.channel);
-        conversation.on('end', this.ended.bind(this, conversation));
-        return conversation;
+        return new Promise((resolve, reject) => {
+            const conversation = new Conversation(exchange.input.channel);
+            conversation.on('end', this.ended.bind(this, conversation));
+            resolve(conversation);
+        });
     }
 
     start(exchange) {
-        const conversation = this.create(exchange);
-
-        this.storage.add(conversation.id, conversation)
-        .then(() => {
-            this.emit('start', conversation, exchange)
+        this.create(exchange).then((conversation) => {
+            return this.storage.add(conversation.id, conversation)
+            .then(() => {
+                this.emit('start', conversation, exchange)
+                return conversation;
+            });
         });
     }
 
