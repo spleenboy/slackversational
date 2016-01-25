@@ -3,7 +3,7 @@
 const EventEmitter = require('events');
 const Storage = require('./storage');
 const Conversation = require('./conversation');
-const Message = require('./message');
+const Exchange = require('./exchange');
 
 module.exports = class Dispatcher extends EventEmitter {
     constructor(slack, storage = null) {
@@ -14,34 +14,34 @@ module.exports = class Dispatcher extends EventEmitter {
     }
 
 
-    dispatch(message) {
-        if (this.exclude && this.exclude(message)) {
-            this.emit('excluded', message);
+    dispatch(exchange) {
+        if (this.exclude && this.exclude(exchange)) {
+            this.emit('excluded', exchange);
             return;
         }
 
-        this.storage.findById(message.input.channel)
+        this.storage.findById(exchange.input.channel)
         .then((conversation) => {
             if (conversation) {
-                conversation.process(message);
+                conversation.process(exchange);
             } else {
-                this.start(message);
+                this.start(exchange);
             }
         });
     }
 
-    create(message) {
-        const conversation = new Conversation(message.input.channel);
+    create(exchange) {
+        const conversation = new Conversation(exchange.input.channel);
         conversation.on('end', this.ended.bind(this, conversation));
         return conversation;
     }
 
-    start(message) {
-        const conversation = this.create(message);
+    start(exchange) {
+        const conversation = this.create(exchange);
 
         this.storage.add(conversation.id, conversation)
         .then(() => {
-            this.emit('start', conversation, message)
+            this.emit('start', conversation, exchange)
         });
     }
 
@@ -53,12 +53,12 @@ module.exports = class Dispatcher extends EventEmitter {
 
     listen(slack) {
         this.slack = slack;
-        slack.on('message', (input) => {
+        slack.on('exchange', (input) => {
             try {
-                const message = new Message(input, slack);
-                this.dispatch(message);
+                const exchange = new Exchange(input, slack);
+                this.dispatch(exchange);
             } catch (e) {
-                console.error("Error dispatching message", e);
+                console.error("Error dispatching exchange", e);
             }
         });
     }

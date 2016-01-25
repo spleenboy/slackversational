@@ -3,7 +3,7 @@
 module.exports = {
     Conversation: require('./conversation'),
     Dispatcher: require('./dispatcher'),
-    Message: require('./message'),
+    Exchange: require('./exchange'),
     Request: require('./request'),
     Response: require('./response'),
     Trickle: require('./trickle'),

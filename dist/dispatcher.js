@@ -11,7 +11,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var EventEmitter = require('events');
 var Storage = require('./storage');
 var Conversation = require('./conversation');
-var Message = require('./message');
+var Exchange = require('./exchange');
 
 module.exports = function (_EventEmitter) {
     _inherits(Dispatcher, _EventEmitter);
@@ -31,32 +31,38 @@ module.exports = function (_EventEmitter) {
 
     _createClass(Dispatcher, [{
         key: 'dispatch',
-        value: function dispatch(message) {
+        value: function dispatch(exchange) {
             var _this2 = this;
 
-            if (this.exclude && this.exclude(message)) {
-                this.emit('excluded', message);
+            if (this.exclude && this.exclude(exchange)) {
+                this.emit('excluded', exchange);
                 return;
             }
 
-            this.storage.findById(message.input.channel).then(function (conversation) {
+            this.storage.findById(exchange.input.channel).then(function (conversation) {
                 if (conversation) {
-                    conversation.process(message);
+                    conversation.process(exchange);
                 } else {
-                    _this2.start(message);
+                    _this2.start(exchange);
                 }
             });
         }
     }, {
+        key: 'create',
+        value: function create(exchange) {
+            var conversation = new Conversation(exchange.input.channel);
+            conversation.on('end', this.ended.bind(this, conversation));
+            return conversation;
+        }
+    }, {
         key: 'start',
-        value: function start(message) {
+        value: function start(exchange) {
             var _this3 = this;
 
-            var conversation = new Conversation(message.input.channel);
+            var conversation = this.create(exchange);
 
             this.storage.add(conversation.id, conversation).then(function () {
-                conversation.on('end', _this3.ended.bind(_this3, conversation));
-                _this3.emit('start', conversation, message);
+                _this3.emit('start', conversation, exchange);
             });
         }
     }, {
@@ -70,12 +76,12 @@ module.exports = function (_EventEmitter) {
             var _this4 = this;
 
             this.slack = slack;
-            slack.on('message', function (input) {
+            slack.on('exchange', function (input) {
                 try {
-                    var message = new Message(input, slack);
-                    _this4.dispatch(message);
+                    var exchange = new Exchange(input, slack);
+                    _this4.dispatch(exchange);
                 } catch (e) {
-                    console.error("Error dispatching message", e);
+                    console.error("Error dispatching exchange", e);
                 }
             });
         }

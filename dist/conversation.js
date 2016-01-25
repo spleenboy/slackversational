@@ -39,7 +39,7 @@ module.exports = function (_EventEmitter) {
         }
     }, {
         key: 'process',
-        value: function process(message) {
+        value: function process(exchange) {
             var request = this.currentRequest();
 
             if (!request) {
@@ -48,27 +48,27 @@ module.exports = function (_EventEmitter) {
             }
 
             if (request.asked) {
-                this.emit('reading', request, message);
-                request.read(message);
+                this.emit('reading', request, exchange);
+                request.read(exchange);
             } else {
-                this.emit('asking', request, message);
-                request.ask(message);
+                this.emit('asking', request, exchange);
+                request.ask(exchange);
             }
-            if (message.output) {
-                this.emit('saying', request, message);
-                this.say(message.channel, message.output);
+            if (exchange.output) {
+                this.emit('saying', request, exchange);
+                this.say(exchange.channel, exchange.output);
             }
 
             // If the request has changed, process the new one, too
             var newRequest = this.currentRequest();
             if (newRequest && request.id !== newRequest.id) {
-                this.process(message);
+                this.process(exchange);
             }
         }
     }, {
         key: 'end',
-        value: function end(message) {
-            this.emit('end', message);
+        value: function end(exchange) {
+            this.emit('end', exchange);
         }
     }, {
         key: 'addRequest',

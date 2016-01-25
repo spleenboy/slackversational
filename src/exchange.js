@@ -2,7 +2,7 @@
 
 const _ = require('lodash');
 
-module.exports = class Message {
+module.exports = class Exchange {
     constructor(input, slack) {
         // The original input
         this.input = input;

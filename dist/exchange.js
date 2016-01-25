@@ -7,8 +7,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _ = require('lodash');
 
 module.exports = function () {
-    function Message(input, slack) {
-        _classCallCheck(this, Message);
+    function Exchange(input, slack) {
+        _classCallCheck(this, Exchange);
 
         // The original input
         this.input = input;
@@ -26,7 +26,7 @@ module.exports = function () {
         this.output = [];
     }
 
-    _createClass(Message, [{
+    _createClass(Exchange, [{
         key: "write",
         value: function write(pool) {
             var _this = this;
@@ -62,5 +62,5 @@ module.exports = function () {
         }
     }]);
 
-    return Message;
+    return Exchange;
 }();

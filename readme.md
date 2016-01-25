@@ -9,10 +9,10 @@ The constructor takes two arguments. The first is the slack client. The second i
 
 ```javascript
 const dispatcher = new Dispatcher(slack);
-dispatcher.on('start', (conversation, message) => {
+dispatcher.on('start', (conversation, exchange) => {
     // Initialize the conversation
 });
-dispatcher.on('end', (conversation, message) => {
+dispatcher.on('end', (conversation, exchange) => {
     // Handle the conversation ending
 });
 slack.login();
@@ -29,14 +29,14 @@ A request has an array of both `questions` and `responses`.
 
 
 ## Conversation
-A `Conversation` tracks the thread of messages passed back and forth through a channel. Each exchange between the bot and external user is treated as a `Request` object. The conversation object keeps track of the current request and passes the current message to the request for processing.
+A `Conversation` tracks the thread of exchanges passed back and forth through a channel. Each exchange between the bot and external user is treated as a `Request` object. The conversation object keeps track of the current request and passes the current exchange to the request for processing.
 
 A `Conversation` exposes three request events: `reading`, `asking`, `saying`. These events are emitted immediately before each call to the current request. See the `Request` object for details on these methods.
 
 When a conversation is started, you'll initialize it by adding requests to the conversation `chain` property.
 
 ```javascript
-dispatcher.on('start', (conversation, message) => {
+dispatcher.on('start', (conversation, exchange) => {
     const getDate = new GetDateRequest();
     conversation.addRequest(getDate);
 });
@@ -48,15 +48,15 @@ The conversation object support several method for changing the current request.
 `setRequest` is the most flexible. It takes a single argument than can be either an integer or a predicate function. If the argument is an integer, the zero-indexed request in the chain is selected. The predicate should expect a request object as its argument
 
 ```javascript
-    getDate.on('valid', (message) => {
-        conversation.setRequest((request) => request === getTime);
-    });
+getDate.on('valid', (exchange) => {
+    conversation.setRequest((request) => request === getTime);
+});
 ```
 
-You can also use `conversation.previousRequest` and `conversation.nextRequest` to change the current request. If the request is changed before the end of message processing, the conversation will call the `ask` method on the next request.
+You can also use `conversation.previousRequest` and `conversation.nextRequest` to change the current request. If the request is changed before the end of exchange processing, the conversation will call the `ask` method on the next request.
 
 
-## Message
+## Exchange 
 
 
 ## Processors

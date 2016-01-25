@@ -30,39 +30,39 @@ module.exports = class Request extends EventEmitter {
 
     // Returns an array of string statements, pulled randomly from
     // the available questions. This is usually step #1 in processing a request.
-    ask(message) {
+    ask(exchange) {
 
-        message.write(this.questions);
+        exchange.write(this.questions);
         this.asked++;
 
-        this.emit('asking', message);
+        this.emit('asking', exchange);
 
-        return message;
+        return exchange;
     }
 
     // Reads and processes input. Returns a Response object.
     // Typically step #2, after a request has been asked.
     // This part of the request involves parsing and validating
     // the input through one or more processors.
-    read(message) {
+    read(exchange) {
 
         this.processors.forEach(process => {
             try {
-                process.apply(message);
+                process.apply(exchange);
             } catch (e) {
                 console.error("Processor error", e, process);
             }
         });
 
-        if (message.valid) {
-            this.emit('valid', message);
-            this.responses && message.write(this.responses);
+        if (exchange.valid) {
+            this.emit('valid', exchange);
+            this.responses && exchange.write(this.responses);
         } else {
             // Ask again!
-            this.emit('invalid', message);
-            return this.ask(message);
+            this.emit('invalid', exchange);
+            return this.ask(exchange);
         }
 
-        return message;
+        return exchange;
     }
 }
