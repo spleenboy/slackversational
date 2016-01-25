@@ -1,4 +1,4 @@
-# me-talk-slack
+# slackversational
 > A helper module for handling the plumbing of a Slack bot that uses [node-slack-client](https://github.com/slackhq/node-slack-client).
 
 

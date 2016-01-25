@@ -1,5 +1,5 @@
 {
-  "name": "me-talk-slack",
+  "name": "slackversational",
   "version": "1.0.0",
   "description": "A utility module for conversations over slack-client",
   "main": "dist/index.js",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/spleenboy/me-talk-slack.git"
+    "url": "git+https://github.com/spleenboy/slackversational.git"
   },
   "keywords": [
     "slack",
@@ -18,9 +18,9 @@
   "author": "Alexander Barrett",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/spleenboy/me-talk-slack/issues"
+    "url": "https://github.com/spleenboy/slackversational/issues"
   },
-  "homepage": "https://github.com/spleenboy/me-talk-slack#readme",
+  "homepage": "https://github.com/spleenboy/slackversational#readme",
   "dependencies": {
     "lodash": "^4.0.0",
     "moment": "^2.11.1"
