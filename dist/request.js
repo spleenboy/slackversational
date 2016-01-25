@@ -9,6 +9,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var _ = require('lodash');
+var Promise = require('bluebird');
 var EventEmitter = require('events');
 var log = require('./logger');
 
@@ -57,6 +58,17 @@ module.exports = function (_EventEmitter) {
             });
         }
 
+        // Returns a promise to resolve all of the processors
+        // on the exchange
+
+    }, {
+        key: 'process',
+        value: function process(exchange) {
+            return Promise.each(this.processors, function (p) {
+                return p.apply(exchange);
+            });
+        }
+
         // Returns an array of string statements, pulled randomly from
         // the available questions. This is usually step #1 in processing a request.
 
@@ -82,27 +94,21 @@ module.exports = function (_EventEmitter) {
         value: function read(exchange) {
             var _this5 = this;
 
-            this.processors.forEach(function (process) {
-                try {
-                    process.apply(exchange);
-                } catch (e) {
-                    console.error("Processor error", e, process);
-                }
-            });
+            return this.process(exchange).then(function () {
+                _this5.emit(exchange.valid ? 'valid' : 'invalid', exchange);
 
-            this.emit(exchange.valid ? 'valid' : 'invalid', exchange);
+                return _this5.getResponses(exchange).then(function (responses) {
+                    if (responses) {
+                        exchange.write(responses);
+                    }
 
-            return this.getResponses(exchange).then(function (responses) {
-                if (responses) {
-                    exchange.write(responses);
-                }
-
-                if (!exchange.valid) {
-                    log.debug("Received invalid input. Asking again", exchange.input.text);
-                    return _this5.ask(exchange);
-                } else {
-                    return exchange;
-                }
+                    if (!exchange.valid) {
+                        log.debug("Received invalid input. Asking again", exchange.input.text);
+                        return _this5.ask(exchange);
+                    } else {
+                        return exchange;
+                    }
+                });
             });
         }
     }], [{

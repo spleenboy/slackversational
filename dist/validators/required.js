@@ -21,8 +21,8 @@ module.exports = function (_Validator) {
     }
 
     _createClass(Required, [{
-        key: 'isValid',
-        value: function isValid(value) {
+        key: 'validate',
+        value: function validate(value) {
             return _.toString(value).length > 0;
         }
     }]);

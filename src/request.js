@@ -1,6 +1,7 @@
 "use strict";
 
 const _ = require('lodash');
+const Promise = require('bluebird');
 const EventEmitter = require('events');
 const log = require('./logger');
 
@@ -43,6 +44,15 @@ module.exports = class Request extends EventEmitter {
     }
 
 
+    // Returns a promise to resolve all of the processors
+    // on the exchange
+    process(exchange) {
+        return Promise.each(this.processors, (p) => {
+            return p.apply(exchange); 
+        });
+    }
+
+
     // Returns an array of string statements, pulled randomly from
     // the available questions. This is usually step #1 in processing a request.
     ask(exchange) {
@@ -59,28 +69,23 @@ module.exports = class Request extends EventEmitter {
     // This part of the request involves parsing and validating
     // the input through one or more processors.
     read(exchange) {
-        this.processors.forEach(process => {
-            try {
-                process.apply(exchange);
-            } catch (e) {
-                console.error("Processor error", e, process);
-            }
-        });
+        return this.process(exchange)
+        .then(() => {
+            this.emit(exchange.valid ? 'valid' : 'invalid', exchange);
 
-        this.emit(exchange.valid ? 'valid' : 'invalid', exchange);
+            return this.getResponses(exchange)
+            .then((responses) => {
+                if (responses) {
+                    exchange.write(responses);
+                }
 
-        return this.getResponses(exchange)
-        .then((responses) => {
-            if (responses) {
-                exchange.write(responses);
-            }
-
-            if (!exchange.valid) {
-                log.debug("Received invalid input. Asking again", exchange.input.text);
-                return this.ask(exchange);
-            } else {
-                return exchange;
-            }
+                if (!exchange.valid) {
+                    log.debug("Received invalid input. Asking again", exchange.input.text);
+                    return this.ask(exchange);
+                } else {
+                    return exchange;
+                }
+            });
         });
     }
 }

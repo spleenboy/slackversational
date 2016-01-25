@@ -4,6 +4,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var Promise = require('bluebird');
+
 module.exports = function () {
     function Validator() {
         var messages = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
@@ -14,18 +16,23 @@ module.exports = function () {
     }
 
     _createClass(Validator, [{
-        key: "isValid",
-        value: function isValid(value) {
+        key: "validate",
+        value: function validate(value) {
             return true;
         }
     }, {
         key: "apply",
-        value: function apply(response) {
-            if (!this.isValid(response.value) && this.messages) {
-                console.log("Invalid response value", response.value);
-                response.write(this.messages);
-                response.valid = false;
-            }
+        value: function apply(exchange) {
+            var _this = this;
+
+            var validate = Promise.method(this.validate.bind(this));
+            return validate(exchange.value).then(function (valid) {
+                if (!valid) {
+                    exchange.valid = false;
+                    exchange.write(_this.messages);
+                }
+                return exchange;
+            });
         }
     }]);
 
