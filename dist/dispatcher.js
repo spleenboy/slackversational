@@ -12,6 +12,7 @@ var EventEmitter = require('events');
 var Storage = require('./storage');
 var Conversation = require('./conversation');
 var Exchange = require('./exchange');
+var log = require('./logger');
 
 module.exports = function (_EventEmitter) {
     _inherits(Dispatcher, _EventEmitter);
@@ -39,10 +40,11 @@ module.exports = function (_EventEmitter) {
                 return;
             }
 
+            log.debug("Dispatching exchange from", exchange.input.channel);
             this.storage.findById(exchange.input.channel).then(function (conversation) {
                 if (!conversation) {
-                    _this2.start(exchange).then(function (conversation) {
-                        conversation.process(exchange);
+                    _this2.start(exchange).then(function (created) {
+                        created && created.process(exchange);
                     });
                 } else {
                     conversation.process(exchange);
@@ -57,6 +59,7 @@ module.exports = function (_EventEmitter) {
             return new Promise(function (resolve, reject) {
                 var conversation = new Conversation(exchange.input.channel);
                 conversation.on('end', _this3.ended.bind(_this3, conversation));
+                _this3.emit('start', conversation, exchange);
                 resolve(conversation);
             });
         }
@@ -65,9 +68,9 @@ module.exports = function (_EventEmitter) {
         value: function start(exchange) {
             var _this4 = this;
 
-            this.create(exchange).then(function (conversation) {
+            return this.create(exchange).then(function (conversation) {
+                log.debug("Created new conversation", conversation.id);
                 return _this4.storage.add(conversation.id, conversation).then(function () {
-                    _this4.emit('start', conversation, exchange);
                     return conversation;
                 });
             });
@@ -75,7 +78,7 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'ended',
         value: function ended(conversation) {
-            this.storage.removeById(conversation.id);
+            return this.storage.removeById(conversation.id);
         }
     }, {
         key: 'listen',
@@ -83,12 +86,12 @@ module.exports = function (_EventEmitter) {
             var _this5 = this;
 
             this.slack = slack;
-            slack.on('exchange', function (input) {
+            slack.on('message', function (input) {
                 try {
                     var exchange = new Exchange(input, slack);
                     _this5.dispatch(exchange);
                 } catch (e) {
-                    console.error("Error dispatching exchange", e);
+                    log.error("Error dispatching exchange", e);
                 }
             });
         }

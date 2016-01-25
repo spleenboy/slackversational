@@ -1,6 +1,7 @@
 "use strict";
 
 const _ = require('lodash');
+const log = require('./logger');
 
 module.exports = class Exchange {
     constructor(input, slack) {
@@ -39,12 +40,17 @@ module.exports = class Exchange {
         const choice = _.sample(pool);
         const statements = _.isArray(choice) ? choice : [choice];
         const values = statements.map((statement) => {
-            return _.isFunction(statement) ? statement(this) : statement;
+            const value = _.isFunction(statement) ? statement(this) : statement;
+            const text = _.toString(value);
+            if (!text.length) {
+                log.warn("Statement resulted in an empty string", statement);
+            }
+            return text;
         });
 
         if (values) {
             values.forEach((value) => {
-                this.output.push(value);
+                value.length && this.output.push(value);
             });
         }
         return values;

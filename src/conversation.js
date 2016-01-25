@@ -4,6 +4,7 @@ const EventEmitter = require('events');
 const _ = require('lodash');
 const Typist = require('./typist');
 const Trickle = require('./trickle');
+const log = require('./logger');
 
 module.exports = class Conversation extends EventEmitter {
     constructor(id) {
@@ -31,11 +32,13 @@ module.exports = class Conversation extends EventEmitter {
 
         if (!request) {
             this.emit('error', 'No current request');
+            log.debug("No current request found. Abandoning process.");
             return;
         }
 
         let promise;
 
+        log.debug("Passing exchange to request", request.id);
         if (request.asked) {
             this.emit('reading', request, exchange);
             promise = request.read(exchange);

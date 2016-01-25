@@ -4,7 +4,7 @@
   "description": "A utility module for conversations over slack-client",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node example/index.js",
+    "start": "node example/index.js | node_modules/.bin/bunyan",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/spleenboy/slackversational#readme",
   "dependencies": {
+    "bunyan": "^1.5.1",
     "lodash": "^4.0.0",
     "moment": "^2.11.1"
   },

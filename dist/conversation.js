@@ -12,6 +12,7 @@ var EventEmitter = require('events');
 var _ = require('lodash');
 var Typist = require('./typist');
 var Trickle = require('./trickle');
+var log = require('./logger');
 
 module.exports = function (_EventEmitter) {
     _inherits(Conversation, _EventEmitter);
@@ -46,11 +47,13 @@ module.exports = function (_EventEmitter) {
 
             if (!request) {
                 this.emit('error', 'No current request');
+                log.debug("No current request found. Abandoning process.");
                 return;
             }
 
             var promise = undefined;
 
+            log.debug("Passing exchange to request", request.id);
             if (request.asked) {
                 this.emit('reading', request, exchange);
                 promise = request.read(exchange);

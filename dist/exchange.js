@@ -5,6 +5,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var _ = require('lodash');
+var log = require('./logger');
 
 module.exports = function () {
     function Exchange(input, slack) {
@@ -27,25 +28,30 @@ module.exports = function () {
     }
 
     _createClass(Exchange, [{
-        key: "write",
+        key: 'write',
         value: function write(pool) {
             var _this = this;
 
             var choice = _.sample(pool);
             var statements = _.isArray(choice) ? choice : [choice];
             var values = statements.map(function (statement) {
-                return _.isFunction(statement) ? statement(_this) : statement;
+                var value = _.isFunction(statement) ? statement(_this) : statement;
+                var text = _.toString(value);
+                if (!text.length) {
+                    log.warn("Statement resulted in an empty string", statement);
+                }
+                return text;
             });
 
             if (values) {
                 values.forEach(function (value) {
-                    _this.output.push(value);
+                    value.length && _this.output.push(value);
                 });
             }
             return values;
         }
     }, {
-        key: "channel",
+        key: 'channel',
         get: function get() {
             if (!this._channel) {
                 this._channel = this.slack.getChannelGroupOrDMByID(this.input.channel);
@@ -53,7 +59,7 @@ module.exports = function () {
             return this._channel;
         }
     }, {
-        key: "user",
+        key: 'user',
         get: function get() {
             if (!this._user) {
                 this._user = this.slack.getUserByID(this.input.user);

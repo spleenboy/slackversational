@@ -10,6 +10,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var _ = require('lodash');
 var EventEmitter = require('events');
+var log = require('./logger');
 
 module.exports = function (_EventEmitter) {
     _inherits(Request, _EventEmitter);
@@ -97,10 +98,11 @@ module.exports = function (_EventEmitter) {
                 }
 
                 if (!exchange.valid) {
-                    _this5.ask(exchange);
+                    log.debug("Received invalid input. Asking again", exchange.input.text);
+                    return _this5.ask(exchange);
+                } else {
+                    return exchange;
                 }
-
-                return exchange;
             });
         }
     }], [{

@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const EventEmitter = require('events');
+const log = require('./logger');
 
 module.exports = class Request extends EventEmitter {
     constructor(id = null) {
@@ -75,10 +76,11 @@ module.exports = class Request extends EventEmitter {
             }
 
             if (!exchange.valid) {
-                this.ask(exchange);
+                log.debug("Received invalid input. Asking again", exchange.input.text);
+                return this.ask(exchange);
+            } else {
+                return exchange;
             }
-
-            return exchange;
         });
     }
 }
