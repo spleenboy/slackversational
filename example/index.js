@@ -36,6 +36,7 @@ dispatcher.on('start', (conversation, message) => {
     getWhen.processors = [
         new Talker.Parsers.FutureDate(),
         new Talker.Validators.Required(["That doesn't make sense."]),
+        new Talker.Parsers.Delay(),
     ];
     getWhen.on('valid', (msg) => {
         console.log("Got valid input", msg.value);
