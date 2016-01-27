@@ -1,6 +1,7 @@
 "use strict";
 
 const EventEmitter = require('events');
+const Promise = require('bluebird');
 const Storage = require('./storage');
 const Conversation = require('./conversation');
 const Exchange = require('./exchange');
@@ -36,19 +37,15 @@ module.exports = class Dispatcher extends EventEmitter {
     }
 
     create(exchange) {
-        return new Promise((resolve, reject) => {
-            const conversation = new Conversation(exchange.input.channel);
-            conversation.on('end', this.ended.bind(this, conversation));
-            this.emit('start', conversation, exchange)
-            resolve(conversation);
-        });
+        return new Conversation(exchange.input.channel);
     }
 
     start(exchange) {
-        return this.create(exchange).then((conversation) => {
-            log.debug("Created new conversation", conversation.id);
+        const create = Promise.method(this.create.bind(this));
+        return create(exchange).then((conversation) => {
+            this.emit('start', conversation, exchange)
+            conversation.on('end', this.ended.bind(this, conversation));
             return this.storage.add(conversation.id, conversation)
-                   .then(() => {return conversation});
         });
     }
 

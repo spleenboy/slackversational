@@ -9,6 +9,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var EventEmitter = require('events');
+var Promise = require('bluebird');
 var Storage = require('./storage');
 var Conversation = require('./conversation');
 var Exchange = require('./exchange');
@@ -54,25 +55,18 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'create',
         value: function create(exchange) {
-            var _this3 = this;
-
-            return new Promise(function (resolve, reject) {
-                var conversation = new Conversation(exchange.input.channel);
-                conversation.on('end', _this3.ended.bind(_this3, conversation));
-                _this3.emit('start', conversation, exchange);
-                resolve(conversation);
-            });
+            return new Conversation(exchange.input.channel);
         }
     }, {
         key: 'start',
         value: function start(exchange) {
-            var _this4 = this;
+            var _this3 = this;
 
-            return this.create(exchange).then(function (conversation) {
-                log.debug("Created new conversation", conversation.id);
-                return _this4.storage.add(conversation.id, conversation).then(function () {
-                    return conversation;
-                });
+            var create = Promise.method(this.create.bind(this));
+            return create(exchange).then(function (conversation) {
+                _this3.emit('start', conversation, exchange);
+                conversation.on('end', _this3.ended.bind(_this3, conversation));
+                return _this3.storage.add(conversation.id, conversation);
             });
         }
     }, {
@@ -83,13 +77,13 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'listen',
         value: function listen(slack) {
-            var _this5 = this;
+            var _this4 = this;
 
             this.slack = slack;
             slack.on('message', function (input) {
                 try {
                     var exchange = new Exchange(input, slack);
-                    _this5.dispatch(exchange);
+                    _this4.dispatch(exchange);
                 } catch (e) {
                     log.error("Error dispatching exchange", e);
                 }

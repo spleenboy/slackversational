@@ -4,8 +4,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var _ = require('lodash');
 var log = require('./logger');
+var StatementPool = require('./statement-pool');
 
 module.exports = function () {
     function Exchange(input, slack) {
@@ -29,25 +29,14 @@ module.exports = function () {
 
     _createClass(Exchange, [{
         key: 'write',
-        value: function write(pool) {
+        value: function write(statements) {
             var _this = this;
 
-            var choice = _.sample(pool);
-            var statements = _.isArray(choice) ? choice : [choice];
-            var values = statements.map(function (statement) {
-                var value = _.isFunction(statement) ? statement(_this) : statement;
-                var text = _.toString(value);
-                if (!text.length) {
-                    log.warn("Statement resulted in an empty string", statement);
-                }
-                return text;
+            var pool = new StatementPool(statements);
+            var values = pool.bind(this);
+            values.forEach(function (value) {
+                value.length && _this.output.push(value);
             });
-
-            if (values) {
-                values.forEach(function (value) {
-                    value.length && _this.output.push(value);
-                });
-            }
             return values;
         }
     }, {
