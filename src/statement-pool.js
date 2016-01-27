@@ -19,7 +19,7 @@ module.exports = class StatementPool {
         if (!_.isArray(statements)) {
             statements = [statements];
         }
-        this.pool.push(statements);
+        this.pool = this.pool.concat(statements);
     }
 
     select() {
@@ -31,14 +31,18 @@ module.exports = class StatementPool {
 
     // Returns an array of strings, bound to the specified context
     bind(context) {
-        const statement = this.select();
+        let statement = this.select();
 
         if (!statement) {
             return [];
         }
 
+        if (!_.isArray(statement)) {
+            statement = [statement];
+        }
+
         const phrases = statement.map((phrase) => {
-            const value = _.isFunction(phrase) ? phrase(this) : phrase;
+            const value = _.isFunction(phrase) ? phrase(context) : phrase;
             const text = _.toString(value);
             if (!text.length) {
                 log.warn("Statement resulted in an empty string", phrase);

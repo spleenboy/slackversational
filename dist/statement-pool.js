@@ -27,7 +27,7 @@ module.exports = function () {
             if (!_.isArray(statements)) {
                 statements = [statements];
             }
-            this.pool.push(statements);
+            this.pool = this.pool.concat(statements);
         }
     }, {
         key: "select",
@@ -43,16 +43,18 @@ module.exports = function () {
     }, {
         key: "bind",
         value: function bind(context) {
-            var _this = this;
-
             var statement = this.select();
 
             if (!statement) {
                 return [];
             }
 
+            if (!_.isArray(statement)) {
+                statement = [statement];
+            }
+
             var phrases = statement.map(function (phrase) {
-                var value = _.isFunction(phrase) ? phrase(_this) : phrase;
+                var value = _.isFunction(phrase) ? phrase(context) : phrase;
                 var text = _.toString(value);
                 if (!text.length) {
                     log.warn("Statement resulted in an empty string", phrase);
