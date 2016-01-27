@@ -15,16 +15,24 @@ dispatcher.exclude = (message) => !message.channel.is_im;
 dispatcher.on('start', (conversation, message) => {
     console.log("Conversation started based on message", message.input.text);
 
+    conversation.on('processing', (request, exchange) => {
+        if (exchange.input.text === "cancel") {
+            exchange.valid = false;
+            exchange.write("Canceling");
+            conversation.end();
+        }
+    });
+
     // Initialize the conversation based on the message received
     const getName = new Talker.Request("getName");
     getName.questions = [["What do you want?"], ["What is it you want?"]];
     getName.on('valid', (msg) => {
         console.log("Got valid input", msg.value);
         if (msg.value !== "nothing") {
-            conversation.say(msg.channel, `I see you want ${msg.value}.`);
+            msg.write(`I see you want ${msg.value}.`);
             conversation.setRequest(r => r.id === "getWhen");
         } else {
-            conversation.say(msg.channel, "Okay. Fine.");
+            msg.write("Okay. Fine.");
             conversation.end();
         }
     });

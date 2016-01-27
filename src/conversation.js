@@ -2,6 +2,7 @@
 
 const EventEmitter = require('events');
 const _ = require('lodash');
+const Promise = require('bluebird');
 const Typist = require('./typist');
 const Trickle = require('./trickle');
 const log = require('./logger');
@@ -38,16 +39,22 @@ module.exports = class Conversation extends EventEmitter {
 
         let promise;
 
-        log.debug("Passing exchange to request", request.id);
-        if (request.asked) {
+        // Allow listeners to modify the initial exchange
+        this.emit('processing', request, exchange);
+
+        if (!exchange.valid) {
+            // Make an empty promise since the request has been abandoned
+            promise = Promise.method((x) => x);
+        }
+        else if (request.asked) {
             this.emit('reading', request, exchange);
-            promise = request.read(exchange);
+            promise = Promise.method(request.read.bind(request));
         } else {
             this.emit('asking', request, exchange);
-            promise = request.ask(exchange);
+            promise = Promise.method(request.ask.bind(request));
         }
 
-        promise.then((exchange) => {
+        promise(exchange).then((exchange) => {
             if (exchange.output) {
                 this.emit('saying', request, exchange);
                 this.say(exchange.channel, exchange.output);

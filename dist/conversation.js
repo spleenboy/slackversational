@@ -10,6 +10,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var EventEmitter = require('events');
 var _ = require('lodash');
+var Promise = require('bluebird');
 var Typist = require('./typist');
 var Trickle = require('./trickle');
 var log = require('./logger');
@@ -53,16 +54,23 @@ module.exports = function (_EventEmitter) {
 
             var promise = undefined;
 
-            log.debug("Passing exchange to request", request.id);
-            if (request.asked) {
+            // Allow listeners to modify the initial exchange
+            this.emit('processing', request, exchange);
+
+            if (!exchange.valid) {
+                // Make an empty promise since the request has been abandoned
+                promise = Promise.method(function (x) {
+                    return x;
+                });
+            } else if (request.asked) {
                 this.emit('reading', request, exchange);
-                promise = request.read(exchange);
+                promise = Promise.method(request.read.bind(request));
             } else {
                 this.emit('asking', request, exchange);
-                promise = request.ask(exchange);
+                promise = Promise.method(request.ask.bind(request));
             }
 
-            promise.then(function (exchange) {
+            promise(exchange).then(function (exchange) {
                 if (exchange.output) {
                     _this2.emit('saying', request, exchange);
                     _this2.say(exchange.channel, exchange.output);
