@@ -57,7 +57,7 @@ module.exports = function (_EventEmitter) {
             // Allow listeners to modify the initial exchange
             this.emit('processing', request, exchange);
 
-            if (!exchange.valid) {
+            if (exchange.ended) {
                 // Make an empty promise since the request has been abandoned
                 promise = Promise.method(function (x) {
                     return x;
@@ -74,6 +74,12 @@ module.exports = function (_EventEmitter) {
                 if (exchange.output) {
                     _this2.emit('saying', request, exchange);
                     _this2.say(exchange.channel, exchange.output);
+                }
+
+                if (exchange.ended) {
+                    _this2.setRequest(0);
+                    _this2.end();
+                    return;
                 }
 
                 // If the request has changed, process the new one, too

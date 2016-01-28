@@ -15,11 +15,12 @@ dispatcher.exclude = (message) => !message.channel.is_im;
 dispatcher.on('start', (conversation, message) => {
     console.log("Conversation started based on message", message.input.text);
 
+    // You can short circuit the conversation request by setting the
+    // exchange.valid value to false when processing first begins.
     conversation.on('processing', (request, exchange) => {
         if (exchange.input.text === "cancel") {
-            exchange.valid = false;
+            exchange.ended = true;
             exchange.write("Canceling");
-            conversation.end();
         }
     });
 
@@ -29,7 +30,7 @@ dispatcher.on('start', (conversation, message) => {
     getName.on('valid', (msg) => {
         console.log("Got valid input", msg.value);
         if (msg.value !== "nothing") {
-            msg.write(`I see you want ${msg.value}.`);
+            msg.write(`I see you want _${msg.value}_.`);
             conversation.setRequest(r => r.id === "getWhen");
         } else {
             msg.write("Okay. Fine.");

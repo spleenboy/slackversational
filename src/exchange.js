@@ -17,6 +17,9 @@ module.exports = class Exchange {
         // Whether the input was valid
         this.valid = true;
 
+        // Whether the exchange was abandoned completely
+        this.ended = false;
+
         // The statements to use as a response
         this.output = [];
     }

@@ -42,7 +42,7 @@ module.exports = class Conversation extends EventEmitter {
         // Allow listeners to modify the initial exchange
         this.emit('processing', request, exchange);
 
-        if (!exchange.valid) {
+        if (exchange.ended) {
             // Make an empty promise since the request has been abandoned
             promise = Promise.method((x) => x);
         }
@@ -58,6 +58,12 @@ module.exports = class Conversation extends EventEmitter {
             if (exchange.output) {
                 this.emit('saying', request, exchange);
                 this.say(exchange.channel, exchange.output);
+            }
+
+            if (exchange.ended) {
+                this.setRequest(0);
+                this.end();
+                return;
             }
 
             // If the request has changed, process the new one, too
