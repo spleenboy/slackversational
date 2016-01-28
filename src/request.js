@@ -60,7 +60,8 @@ module.exports = class Request extends EventEmitter {
     // Returns an array of string statements, pulled randomly from
     // the available questions. This is usually step #1 in processing a request.
     ask(exchange) {
-        return this.handleAsking(exchange)
+        const handle = Promise.method(this.handleAsking.bind(this));
+        return handle(exchange)
         .then(() => {
             this.asked++;
             return exchange;
@@ -76,7 +77,8 @@ module.exports = class Request extends EventEmitter {
         .then(() => {
             this.emit(exchange.valid ? 'valid' : 'invalid', exchange);
 
-            return this.handleResponding(exchange)
+            const handle = Promise.method(this.handleResponding.bind(this));
+            return handle(exchange)
             .then(() => {
                 if (!exchange.valid) {
                     log.debug("Received invalid input. Asking again", exchange.input.text);

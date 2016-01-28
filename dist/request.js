@@ -81,7 +81,8 @@ module.exports = function (_EventEmitter) {
         value: function ask(exchange) {
             var _this4 = this;
 
-            return this.handleAsking(exchange).then(function () {
+            var handle = Promise.method(this.handleAsking.bind(this));
+            return handle(exchange).then(function () {
                 _this4.asked++;
                 return exchange;
             });
@@ -100,7 +101,8 @@ module.exports = function (_EventEmitter) {
             return this.process(exchange).then(function () {
                 _this5.emit(exchange.valid ? 'valid' : 'invalid', exchange);
 
-                return _this5.handleResponding(exchange).then(function () {
+                var handle = Promise.method(_this5.handleResponding.bind(_this5));
+                return handle(exchange).then(function () {
                     if (!exchange.valid) {
                         log.debug("Received invalid input. Asking again", exchange.input.text);
                         return _this5.ask(exchange);
