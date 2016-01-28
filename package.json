@@ -1,6 +1,6 @@
 {
   "name": "slackversational",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A utility module for conversations over slack-client",
   "main": "dist/index.js",
   "scripts": {
@@ -33,6 +33,7 @@
     "del": "^2.2.0",
     "gulp": "^3.9.0",
     "gulp-babel": "^6.1.1",
+    "gulp-bump": "^1.0.0",
     "gulp-eslint": "^1.1.1",
     "gulp-watch": "^4.3.5",
     "vinyl-paths": "^2.1.0"
