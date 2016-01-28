@@ -61,7 +61,7 @@ module.exports = class Request extends EventEmitter {
     // the available questions. This is usually step #1 in processing a request.
     ask(exchange) {
         return this.handleAsking(exchange)
-        .then((exchange) => {
+        .then(() => {
             this.asked++;
             return exchange;
         });
@@ -77,7 +77,7 @@ module.exports = class Request extends EventEmitter {
             this.emit(exchange.valid ? 'valid' : 'invalid', exchange);
 
             return this.handleResponding(exchange)
-            .then((responses) => {
+            .then(() => {
                 if (!exchange.valid) {
                     log.debug("Received invalid input. Asking again", exchange.input.text);
                     return this.ask(exchange);
