@@ -40,21 +40,25 @@ module.exports = function (_EventEmitter) {
     }
 
     _createClass(Request, [{
-        key: 'getQuestions',
-        value: function getQuestions(exchange) {
+        key: 'handleAsking',
+        value: function handleAsking(exchange) {
             var _this2 = this;
 
             return new Promise(function (resolve, reject) {
-                resolve(_this2.questions);
+                exchange.write(_this2.questions);
+                resolve(exchange);
             });
         }
     }, {
-        key: 'getResponses',
-        value: function getResponses(exchange) {
+        key: 'handleResponding',
+        value: function handleResponding(exchange) {
             var _this3 = this;
 
             return new Promise(function (resolve, reject) {
-                resolve(exchange.valid ? _this3.responses : []);
+                if (exchange.valid && _this3.responses) {
+                    exchange.write(_this3.responses);
+                }
+                resolve(exchange);
             });
         }
 
@@ -77,8 +81,7 @@ module.exports = function (_EventEmitter) {
         value: function ask(exchange) {
             var _this4 = this;
 
-            return this.getQuestions(exchange).then(function (questions) {
-                exchange.write(questions);
+            return this.handleAsking(exchange).then(function (exchange) {
                 _this4.asked++;
                 return exchange;
             });
@@ -97,11 +100,7 @@ module.exports = function (_EventEmitter) {
             return this.process(exchange).then(function () {
                 _this5.emit(exchange.valid ? 'valid' : 'invalid', exchange);
 
-                return _this5.getResponses(exchange).then(function (responses) {
-                    if (responses) {
-                        exchange.write(responses);
-                    }
-
+                return _this5.handleResponding(exchange).then(function (responses) {
                     if (!exchange.valid) {
                         log.debug("Received invalid input. Asking again", exchange.input.text);
                         return _this5.ask(exchange);

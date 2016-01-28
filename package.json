@@ -1,6 +1,6 @@
 {
   "name": "slackversational",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A utility module for conversations over slack-client",
   "main": "dist/index.js",
   "scripts": {
