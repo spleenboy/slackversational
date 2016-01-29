@@ -28,9 +28,15 @@ module.exports = class Dispatcher extends EventEmitter {
             if (!conversation) {
                 this.start(exchange)
                 .then((created) => {
-                    created && created.process(exchange)
+                    if (created) {
+                        created.process(exchange)
+                        log.debug("Starting conversation", created.id);
+                    } else {
+                        log.debug("No conversation created. Skipping exchange.");
+                    }
                 });
             } else {
+                log.debug("Processing exchange with conversation", conversation.id);
                 conversation.process(exchange);
             }
         });

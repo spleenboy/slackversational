@@ -40,6 +40,25 @@ module.exports = function (_EventEmitter) {
             typist.send(channel);
         }
     }, {
+        key: 'getRequestAction',
+        value: function getRequestAction(request, exchange) {
+            if (exchange.ended) {
+                // Make an empty promise since the request has been abandoned
+                log.debug("Exchange is ended. Skipping request processing");
+                return function (x) {
+                    return x;
+                };
+            } else if (request.asked) {
+                this.emit('reading', request, exchange);
+                log.debug("Reading from request", request.id);
+                return request.read.bind(request);
+            } else {
+                this.emit('asking', request, exchange);
+                log.debug("Asking from request", request.id);
+                return request.ask.bind(request);
+            }
+        }
+    }, {
         key: 'process',
         value: function process(exchange) {
             var _this2 = this;
@@ -52,23 +71,10 @@ module.exports = function (_EventEmitter) {
                 return;
             }
 
-            var promise = undefined;
-
             // Allow listeners to modify the initial exchange
             this.emit('processing', request, exchange);
 
-            if (exchange.ended) {
-                // Make an empty promise since the request has been abandoned
-                promise = Promise.method(function (x) {
-                    return x;
-                });
-            } else if (request.asked) {
-                this.emit('reading', request, exchange);
-                promise = Promise.method(request.read.bind(request));
-            } else {
-                this.emit('asking', request, exchange);
-                promise = Promise.method(request.ask.bind(request));
-            }
+            var promise = Promise.method(this.getRequestAction(request, exchange));
 
             promise(exchange).then(function (exchange) {
                 if (exchange.output) {
@@ -77,7 +83,6 @@ module.exports = function (_EventEmitter) {
                 }
 
                 if (exchange.ended) {
-                    _this2.setRequest(0);
                     _this2.end();
                     return;
                 }

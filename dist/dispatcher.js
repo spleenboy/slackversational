@@ -45,9 +45,15 @@ module.exports = function (_EventEmitter) {
             this.storage.findById(exchange.input.channel).then(function (conversation) {
                 if (!conversation) {
                     _this2.start(exchange).then(function (created) {
-                        created && created.process(exchange);
+                        if (created) {
+                            created.process(exchange);
+                            log.debug("Starting conversation", created.id);
+                        } else {
+                            log.debug("No conversation created. Skipping exchange.");
+                        }
                     });
                 } else {
+                    log.debug("Processing exchange with conversation", conversation.id);
                     conversation.process(exchange);
                 }
             });
