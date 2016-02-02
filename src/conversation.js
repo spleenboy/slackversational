@@ -12,6 +12,7 @@ module.exports = class Conversation extends EventEmitter {
         super();
         this.id = id || _.uniqueId();
         this.chain = [];
+        this.topic = null;
         this.step = 0;
         this.trickle = new Trickle();
     }
@@ -27,6 +28,7 @@ module.exports = class Conversation extends EventEmitter {
         const typist = new Typist(statements, this.trickle);
         typist.send(channel);
     }
+
 
     getRequestAction(request, exchange) {
         if (exchange.ended) {
@@ -45,6 +47,15 @@ module.exports = class Conversation extends EventEmitter {
         }
     }
 
+
+    prepareExchange(request, exchange) {
+        // Allow listeners to modify the initial exchange
+        this.emit('preparing', request, exchange);
+        exchange.topic = this.topic;
+        return exchange;
+    }
+
+
     process(exchange) {
         const request = this.currentRequest();
 
@@ -54,12 +65,12 @@ module.exports = class Conversation extends EventEmitter {
             return;
         }
 
-        // Allow listeners to modify the initial exchange
-        this.emit('processing', request, exchange);
+        const prepare = Promise.method(this.prepareExchange.bind(this));
+        const handle = Promise.method(this.getRequestAction(request, exchange));
 
-        const promise = Promise.method(this.getRequestAction(request, exchange));
-
-        promise(exchange).then((exchange) => {
+        prepare(request, exchange)
+        .then(() => handle(exchange))
+        .then(() => {
             if (exchange.output) {
                 this.emit('saying', request, exchange);
                 this.say(exchange.channel, exchange.output);

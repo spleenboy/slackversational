@@ -25,6 +25,7 @@ module.exports = function (_EventEmitter) {
 
         _this.id = id || _.uniqueId();
         _this.chain = [];
+        _this.topic = null;
         _this.step = 0;
         _this.trickle = new Trickle();
         return _this;
@@ -59,6 +60,14 @@ module.exports = function (_EventEmitter) {
             }
         }
     }, {
+        key: 'prepareExchange',
+        value: function prepareExchange(request, exchange) {
+            // Allow listeners to modify the initial exchange
+            this.emit('preparing', request, exchange);
+            exchange.topic = this.topic;
+            return exchange;
+        }
+    }, {
         key: 'process',
         value: function process(exchange) {
             var _this2 = this;
@@ -71,12 +80,12 @@ module.exports = function (_EventEmitter) {
                 return;
             }
 
-            // Allow listeners to modify the initial exchange
-            this.emit('processing', request, exchange);
+            var prepare = Promise.method(this.prepareExchange.bind(this));
+            var handle = Promise.method(this.getRequestAction(request, exchange));
 
-            var promise = Promise.method(this.getRequestAction(request, exchange));
-
-            promise(exchange).then(function (exchange) {
+            prepare(request, exchange).then(function () {
+                return handle(exchange);
+            }).then(function () {
                 if (exchange.output) {
                     _this2.emit('saying', request, exchange);
                     _this2.say(exchange.channel, exchange.output);

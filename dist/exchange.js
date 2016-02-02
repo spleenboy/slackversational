@@ -17,6 +17,9 @@ module.exports = function () {
         // The slack client
         this.slack = slack;
 
+        // Stores the current topic of conversation
+        this.topic = {};
+
         // The parsed value culled from the input
         this.value = input && input.text;
 
