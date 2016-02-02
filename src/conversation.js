@@ -12,7 +12,7 @@ module.exports = class Conversation extends EventEmitter {
         super();
         this.id = id || _.uniqueId();
         this.chain = [];
-        this.topic = null;
+        this.topic = {};
         this.step = 0;
         this.trickle = new Trickle();
     }

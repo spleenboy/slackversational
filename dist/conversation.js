@@ -25,7 +25,7 @@ module.exports = function (_EventEmitter) {
 
         _this.id = id || _.uniqueId();
         _this.chain = [];
-        _this.topic = null;
+        _this.topic = {};
         _this.step = 0;
         _this.trickle = new Trickle();
         return _this;
