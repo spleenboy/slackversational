@@ -25,7 +25,8 @@ module.exports = function (_Parser) {
             if (this.hasAnyWord(value, ['free', 'nothing'])) {
                 return 0;
             }
-            var parsed = parseFloat(value.replace(/[[^0-9\.]/g, ''));
+            var trimmed = value.replace(/[^0-9\.]+/g, '');
+            var parsed = parseFloat(trimmed);
             if (isNaN(parsed)) {
                 return null;
             }
