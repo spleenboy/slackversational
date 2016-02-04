@@ -11,14 +11,14 @@ module.exports = class Conversation extends EventEmitter {
     constructor(id) {
         super();
         this.id = id || _.uniqueId();
-        this.chain = [];
+        this.requests = [];
         this.topic = {};
         this.step = 0;
         this.trickle = new Trickle();
     }
 
     static get emits() {
-        return ['reading', 'asking', 'saying'];
+        return ['preparing', 'reading', 'asking', 'saying', 'error', 'end'];
     }
 
     say(channel, statements) {
@@ -95,17 +95,34 @@ module.exports = class Conversation extends EventEmitter {
     }
 
 
+    chain(...requests) {
+        let current = requests.shift();
+        while (current) {
+            this.addRequest(current);
+            const next = requests.shift();
+            if (next) {
+                current.on('valid', (x) => {
+                    this.setRequest((r) => r === next);
+                });
+            }
+            current = next;
+        }
+    }
+
+
     addRequest(request) {
-        this.chain.push(request);
+        if (!_.find(this.requests, (r) => r === request)) {
+            this.requests.push(request);
+        }
     }
 
 
     setRequest(test) {
         if (_.isInteger(test)) {
-            this.step = _.clamp(test, 0, this.chain.length = 1);
+            this.step = _.clamp(test, 0, this.requests.length = 1);
             return;
         }
-        this.chain.some((request, i) => {
+        this.requests.some((request, i) => {
             if (test(request)) {
                 this.step = i;
                 return true;
@@ -116,22 +133,22 @@ module.exports = class Conversation extends EventEmitter {
 
 
     currentRequest() {
-        return this.chain[this.step];
+        return this.requests[this.step];
     }
 
 
     previousRequest() {
         this.step = _.clamp(this.step - 1, 0);
-        return this.chain[this.step];
+        return this.requests[this.step];
     }
 
 
     // Advances one step forward, or goes to the start
     nextRequest() {
         this.step += 1;
-        if (this.step >= this.chain.length) {
+        if (this.step >= this.requests.length) {
             this.step = 0;
         }
-        return this.chain[this.step];
+        return this.requests[this.step];
     }
 }

@@ -24,7 +24,7 @@ module.exports = function (_EventEmitter) {
         var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Conversation).call(this));
 
         _this.id = id || _.uniqueId();
-        _this.chain = [];
+        _this.requests = [];
         _this.topic = {};
         _this.step = 0;
         _this.trickle = new Trickle();
@@ -109,22 +109,54 @@ module.exports = function (_EventEmitter) {
             this.emit('end', exchange);
         }
     }, {
+        key: 'chain',
+        value: function chain() {
+            var _this3 = this;
+
+            for (var _len = arguments.length, requests = Array(_len), _key = 0; _key < _len; _key++) {
+                requests[_key] = arguments[_key];
+            }
+
+            var current = requests.shift();
+
+            var _loop = function _loop() {
+                _this3.addRequest(current);
+                var next = requests.shift();
+                if (next) {
+                    current.on('valid', function (x) {
+                        _this3.setRequest(function (r) {
+                            return r === next;
+                        });
+                    });
+                }
+                current = next;
+            };
+
+            while (current) {
+                _loop();
+            }
+        }
+    }, {
         key: 'addRequest',
         value: function addRequest(request) {
-            this.chain.push(request);
+            if (!_.find(this.requests, function (r) {
+                return r === request;
+            })) {
+                this.requests.push(request);
+            }
         }
     }, {
         key: 'setRequest',
         value: function setRequest(test) {
-            var _this3 = this;
+            var _this4 = this;
 
             if (_.isInteger(test)) {
-                this.step = _.clamp(test, 0, this.chain.length = 1);
+                this.step = _.clamp(test, 0, this.requests.length = 1);
                 return;
             }
-            this.chain.some(function (request, i) {
+            this.requests.some(function (request, i) {
                 if (test(request)) {
-                    _this3.step = i;
+                    _this4.step = i;
                     return true;
                 }
                 return false;
@@ -133,13 +165,13 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'currentRequest',
         value: function currentRequest() {
-            return this.chain[this.step];
+            return this.requests[this.step];
         }
     }, {
         key: 'previousRequest',
         value: function previousRequest() {
             this.step = _.clamp(this.step - 1, 0);
-            return this.chain[this.step];
+            return this.requests[this.step];
         }
 
         // Advances one step forward, or goes to the start
@@ -148,15 +180,15 @@ module.exports = function (_EventEmitter) {
         key: 'nextRequest',
         value: function nextRequest() {
             this.step += 1;
-            if (this.step >= this.chain.length) {
+            if (this.step >= this.requests.length) {
                 this.step = 0;
             }
-            return this.chain[this.step];
+            return this.requests[this.step];
         }
     }], [{
         key: 'emits',
         get: function get() {
-            return ['reading', 'asking', 'saying'];
+            return ['preparing', 'reading', 'asking', 'saying', 'error', 'end'];
         }
     }]);
 
