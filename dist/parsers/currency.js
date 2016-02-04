@@ -25,9 +25,11 @@ module.exports = function (_Parser) {
             if (this.hasAnyWord(value, ['free', 'nothing'])) {
                 return 0;
             }
-            var currency = /(\b[+-]?[0-9]{1,3}(?:,?[0-9]{3})*(?:\.[0-9]{2})?\b)/;
-            var matches = currency.exec(value);
-            return matches ? parseFloat(matches[0]) : null;
+            var parsed = parseFloat(value.replace(/[[^0-9\.]/g, ''));
+            if (isNaN(parsed)) {
+                return null;
+            }
+            return parsed;
         }
     }]);
 

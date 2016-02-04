@@ -7,8 +7,10 @@ module.exports = class Currency extends Parser {
         if (this.hasAnyWord(value, ['free', 'nothing'])) {
             return 0;
         }
-        const currency = /(\b[+-]?[0-9]{1,3}(?:,?[0-9]{3})*(?:\.[0-9]{2})?\b)/;
-        const matches = currency.exec(value);
-        return matches ? parseFloat(matches[0]) : null;
+        const parsed = parseFloat(value.replace(/[[^0-9\.]/g, ''));
+        if (isNaN(parsed)) {
+            return null;
+        }
+        return parsed;
     }
 }
