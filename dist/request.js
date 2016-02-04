@@ -99,14 +99,14 @@ module.exports = function (_EventEmitter) {
             var _this5 = this;
 
             return this.process(exchange).then(function () {
-                _this5.emit(exchange.valid ? 'valid' : 'invalid', exchange);
-
                 var handle = Promise.method(_this5.handleResponding.bind(_this5));
                 return handle(exchange).then(function () {
                     if (!exchange.valid) {
                         log.debug("Received invalid input. Asking again", exchange.input.text);
+                        _this5.emit('invalid', exchange);
                         return _this5.ask(exchange);
                     } else {
+                        _this5.emit('valid', exchange);
                         return exchange;
                     }
                 });
