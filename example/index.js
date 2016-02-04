@@ -17,7 +17,7 @@ dispatcher.on('start', (conversation, message) => {
 
     // You can short circuit the conversation request by setting the
     // exchange.valid value to false when processing first begins.
-    conversation.on('processing', (request, exchange) => {
+    conversation.on('preparing', (request, exchange) => {
         if (exchange.input.text === "cancel") {
             exchange.ended = true;
             exchange.write("Canceling");

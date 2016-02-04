@@ -41,22 +41,20 @@ module.exports = function (_EventEmitter) {
             typist.send(channel);
         }
     }, {
-        key: 'getRequestAction',
-        value: function getRequestAction(request, exchange) {
+        key: 'callAction',
+        value: function callAction(request, exchange) {
             if (exchange.ended) {
                 // Make an empty promise since the request has been abandoned
                 log.debug("Exchange is ended. Skipping request processing");
-                return function (x) {
-                    return x;
-                };
+                return exchange;
             } else if (request.asked) {
                 this.emit('reading', request, exchange);
                 log.debug("Reading from request", request.id);
-                return request.read.bind(request);
+                return request.read(exchange);
             } else {
                 this.emit('asking', request, exchange);
                 log.debug("Asking from request", request.id);
-                return request.ask.bind(request);
+                return request.ask(exchange);
             }
         }
     }, {
@@ -65,6 +63,7 @@ module.exports = function (_EventEmitter) {
             // Allow listeners to modify the initial exchange
             this.emit('preparing', request, exchange);
             exchange.topic = this.topic;
+            log.debug("Preparing exchange", request.id);
             return exchange;
         }
     }, {
@@ -81,10 +80,10 @@ module.exports = function (_EventEmitter) {
             }
 
             var prepare = Promise.method(this.prepareExchange.bind(this));
-            var handle = Promise.method(this.getRequestAction(request, exchange));
+            var handle = Promise.method(this.callAction.bind(this));
 
             prepare(request, exchange).then(function () {
-                return handle(exchange);
+                return handle(request, exchange);
             }).then(function () {
                 if (exchange.output) {
                     _this2.emit('saying', request, exchange);

@@ -4,7 +4,6 @@ const gulp = require('gulp');
 const babel = require('gulp-babel');
 const eslint = require('gulp-eslint');
 const watch = require('gulp-watch');
-const bump = require('gulp-bump');
 
 const del = require('del');
 const vinylPaths = require('vinyl-paths');
@@ -32,14 +31,8 @@ gulp.task('lint', () => {
            .pipe(eslint.failOnError());
 });
 
-gulp.task('bump', () => {
-    return gulp.src('./package.json')
-           .pipe(bump())
-           .pipe(gulp.dest('./'));
-});
-
 gulp.task('watch', () => {
     gulp.watch(SRC, ['build']);
 });
 
-gulp.task('default', ['clean', 'build', 'bump']);
+gulp.task('default', ['clean', 'build']);

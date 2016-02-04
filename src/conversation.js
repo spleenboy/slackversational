@@ -30,20 +30,20 @@ module.exports = class Conversation extends EventEmitter {
     }
 
 
-    getRequestAction(request, exchange) {
+    callAction(request, exchange) {
         if (exchange.ended) {
             // Make an empty promise since the request has been abandoned
             log.debug("Exchange is ended. Skipping request processing");
-            return (x) => x;
+            return exchange;
         }
         else if (request.asked) {
             this.emit('reading', request, exchange);
             log.debug("Reading from request", request.id);
-            return request.read.bind(request);
+            return request.read(exchange);
         } else {
             this.emit('asking', request, exchange);
             log.debug("Asking from request", request.id);
-            return request.ask.bind(request);
+            return request.ask(exchange);
         }
     }
 
@@ -52,6 +52,7 @@ module.exports = class Conversation extends EventEmitter {
         // Allow listeners to modify the initial exchange
         this.emit('preparing', request, exchange);
         exchange.topic = this.topic;
+        log.debug("Preparing exchange", request.id);
         return exchange;
     }
 
@@ -66,10 +67,10 @@ module.exports = class Conversation extends EventEmitter {
         }
 
         const prepare = Promise.method(this.prepareExchange.bind(this));
-        const handle = Promise.method(this.getRequestAction(request, exchange));
+        const handle = Promise.method(this.callAction.bind(this));
 
         prepare(request, exchange)
-        .then(() => handle(exchange))
+        .then(() => handle(request, exchange))
         .then(() => {
             if (exchange.output) {
                 this.emit('saying', request, exchange);
