@@ -97,7 +97,7 @@ module.exports = function (_EventEmitter) {
 
                 // If the request has changed, process the new one, too
                 var newRequest = _this2.currentRequest();
-                if (newRequest && request.id !== newRequest.id) {
+                if (newRequest && request !== newRequest) {
                     _this2.process(exchange);
                 }
             });

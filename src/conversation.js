@@ -84,7 +84,7 @@ module.exports = class Conversation extends EventEmitter {
 
             // If the request has changed, process the new one, too
             const newRequest = this.currentRequest();
-            if (newRequest && request.id !== newRequest.id) {
+            if (newRequest && request !== newRequest) {
                 this.process(exchange);
             }
         });
