@@ -26,7 +26,7 @@ module.exports = class Request extends EventEmitter {
 
 
     static get emits() {
-        return ['valid', 'invalid'];
+        return ['asked', 'read', 'valid', 'invalid'];
     }
 
 
@@ -64,6 +64,7 @@ module.exports = class Request extends EventEmitter {
         return handle(exchange)
         .then(() => {
             this.asked++;
+            this.emit('asked', exchange);
             return exchange;
         });
     }
@@ -78,6 +79,7 @@ module.exports = class Request extends EventEmitter {
             const handle = Promise.method(this.handleResponding.bind(this));
             return handle(exchange)
             .then(() => {
+                this.emit('read', exchange);
                 if (!exchange.valid) {
                     log.debug("Received invalid input. Asking again", exchange.input.text);
                     this.emit('invalid', exchange);

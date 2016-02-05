@@ -43,7 +43,7 @@ dispatcher.on('start', (conversation, exchange) => {
 ```
 
 ### Moving the Conversation Along
-The conversation object support several method for changing the current request.
+The conversation object support several methods for changing the current request.
 
 `setRequest` is the most flexible. It takes a single argument than can be either an integer or a predicate function. If the argument is an integer, the zero-indexed request in the chain is selected. The predicate should expect a request object as its argument
 
