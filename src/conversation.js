@@ -8,9 +8,10 @@ const Trickle = require('./trickle');
 const log = require('./logger');
 
 module.exports = class Conversation extends EventEmitter {
-    constructor(id) {
+    constructor(id, client) {
         super();
         this.id = id || _.uniqueId();
+        this.client = client;
         this.requests = [];
         this.topic = {};
         this.step = 0;
@@ -21,12 +22,12 @@ module.exports = class Conversation extends EventEmitter {
         return ['preparing', 'reading', 'asking', 'saying', 'error', 'end'];
     }
 
-    say(channel, statements) {
+    say(channelId, statements) {
         if (!_.isArray(statements)) {
             statements = [statements];
         }
         const typist = new Typist(statements, this.trickle);
-        typist.send(channel);
+        typist.send(this.client, channelId);
     }
 
 
@@ -74,7 +75,7 @@ module.exports = class Conversation extends EventEmitter {
         .then(() => {
             if (exchange.output) {
                 this.emit('saying', request, exchange);
-                this.say(exchange.channel, exchange.output);
+                this.say(exchange.input.channel, exchange.output);
             }
 
             if (exchange.ended) {

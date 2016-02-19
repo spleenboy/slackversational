@@ -49,7 +49,7 @@ module.exports = function () {
         key: 'channel',
         get: function get() {
             if (!this._channel) {
-                this._channel = this.slack.getChannelGroupOrDMByID(this.input.channel);
+                this._channel = this.slack.getChannelById(this.input.channel);
             }
             return this._channel;
         }
@@ -57,7 +57,7 @@ module.exports = function () {
         key: 'user',
         get: function get() {
             if (!this._user) {
-                this._user = this.slack.getUserByID(this.input.user);
+                this._user = this.slack.getUserById(this.input.user);
             }
             return this._user;
         }

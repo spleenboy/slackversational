@@ -21,14 +21,18 @@ module.exports = class Typist {
         this.statements = [];
     }
 
-    send(channel) {
+    send(client, channelId) {
         if (!this.statements) {
             return;
         }
 
         let statement;
         while ((statement = this.statements.shift())) {
-            const cmd = channel.send.bind(channel, _.toString(statement));
+            const cmd = this.client.sendMessageToChannel.bind(
+                this.client,
+                _.toString(statement),
+                channelId
+            );
             this.queue.add(cmd);
         };
     }

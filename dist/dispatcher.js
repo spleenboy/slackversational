@@ -13,6 +13,7 @@ var Promise = require('bluebird');
 var Storage = require('./storage');
 var Conversation = require('./conversation');
 var Exchange = require('./exchange');
+var SlackClient = require('./slack-client');
 var log = require('./logger');
 
 module.exports = function (_EventEmitter) {
@@ -85,10 +86,10 @@ module.exports = function (_EventEmitter) {
         value: function listen(slack) {
             var _this4 = this;
 
-            this.slack = slack;
-            slack.on('message', function (input) {
+            this.slack = new SlackClient(slack);
+            slack.onMessage(function (input) {
                 try {
-                    var exchange = new Exchange(input, slack);
+                    var exchange = new Exchange(input, _this4.slack);
                     _this4.dispatch(exchange);
                 } catch (e) {
                     log.error("Error dispatching exchange", e);

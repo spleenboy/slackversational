@@ -1,14 +1,10 @@
 "use strict";
 
 const secret = require('./secret.json');
-const Slack = require('slack-client');
 const Talker = require('../dist/');
 
-const slack = new Slack(secret.token, true, true);
+const slack = Talker.SlackClient.create(secret.token);
 const dispatcher = new Talker.Dispatcher(slack);
-
-slack.on('open', console.log.bind(console));
-slack.on('error', console.error.bind(console));
 
 dispatcher.exclude = (message) => !message.channel.is_im;
 
@@ -58,4 +54,4 @@ dispatcher.on('start', (conversation, message) => {
     });
 });
 
-slack.login();
+slack.start();

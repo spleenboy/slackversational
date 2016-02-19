@@ -18,12 +18,13 @@ var log = require('./logger');
 module.exports = function (_EventEmitter) {
     _inherits(Conversation, _EventEmitter);
 
-    function Conversation(id) {
+    function Conversation(id, client) {
         _classCallCheck(this, Conversation);
 
         var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Conversation).call(this));
 
         _this.id = id || _.uniqueId();
+        _this.client = client;
         _this.requests = [];
         _this.topic = {};
         _this.step = 0;
@@ -33,12 +34,12 @@ module.exports = function (_EventEmitter) {
 
     _createClass(Conversation, [{
         key: 'say',
-        value: function say(channel, statements) {
+        value: function say(channelId, statements) {
             if (!_.isArray(statements)) {
                 statements = [statements];
             }
             var typist = new Typist(statements, this.trickle);
-            typist.send(channel);
+            typist.send(this.client, channelId);
         }
     }, {
         key: 'callAction',
@@ -87,7 +88,7 @@ module.exports = function (_EventEmitter) {
             }).then(function () {
                 if (exchange.output) {
                     _this2.emit('saying', request, exchange);
-                    _this2.say(exchange.channel, exchange.output);
+                    _this2.say(exchange.input.channel, exchange.output);
                 }
 
                 if (exchange.ended) {

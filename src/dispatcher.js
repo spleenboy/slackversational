@@ -5,6 +5,7 @@ const Promise = require('bluebird');
 const Storage = require('./storage');
 const Conversation = require('./conversation');
 const Exchange = require('./exchange');
+const SlackClient = require('./slack-client');
 const log = require('./logger');
 
 module.exports = class Dispatcher extends EventEmitter {
@@ -62,10 +63,10 @@ module.exports = class Dispatcher extends EventEmitter {
 
 
     listen(slack) {
-        this.slack = slack;
-        slack.on('message', (input) => {
+        this.slack = new SlackClient(slack);
+        slack.onMessage((input) => {
             try {
-                const exchange = new Exchange(input, slack);
+                const exchange = new Exchange(input, this.slack);
                 this.dispatch(exchange);
             } catch (e) {
                 log.error("Error dispatching exchange", e);

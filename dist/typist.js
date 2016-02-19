@@ -34,14 +34,14 @@ module.exports = function () {
         }
     }, {
         key: 'send',
-        value: function send(channel) {
+        value: function send(client, channelId) {
             if (!this.statements) {
                 return;
             }
 
             var statement = undefined;
             while (statement = this.statements.shift()) {
-                var cmd = channel.send.bind(channel, _.toString(statement));
+                var cmd = this.client.sendMessageToChannel.bind(this.client, _.toString(statement), channelId);
                 this.queue.add(cmd);
             };
         }
