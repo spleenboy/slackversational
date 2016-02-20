@@ -8,6 +8,7 @@ The `Dispatcher` listens for messages and funnels the message from each channel 
 The constructor takes two arguments. The first is the slack client. The second is a `Storage` instance. This object is used internall by the dispatcher to keep track of all conversations. Conversations are stored and retrieved from the storage object by the channel id.
 
 ```javascript
+const slack = new SlackClient(rtmClient);
 const dispatcher = new Dispatcher(slack);
 dispatcher.on('start', (conversation, exchange) => {
     // Initialize the conversation
@@ -15,7 +16,7 @@ dispatcher.on('start', (conversation, exchange) => {
 dispatcher.on('end', (conversation, exchange) => {
     // Handle the conversation ending
 });
-slack.login();
+slack.start();
 ```
 
 
