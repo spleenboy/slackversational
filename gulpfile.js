@@ -13,15 +13,15 @@ const LIB = 'dist';
 const OPTS = {presets:['es2015']};
 
 
-gulp.task('build', () => {
-    return gulp.src(SRC)
-           .pipe(babel(OPTS))
-           .pipe(gulp.dest(LIB));
-});
-
 gulp.task('clean', () => {
     return gulp.src(LIB + "/*")
            .pipe(vinylPaths(del));
+});
+
+gulp.task('build', ['clean'], () => {
+    return gulp.src(SRC)
+           .pipe(babel(OPTS))
+           .pipe(gulp.dest(LIB));
 });
 
 gulp.task('lint', () => {
@@ -35,4 +35,4 @@ gulp.task('watch', () => {
     gulp.watch(SRC, ['build']);
 });
 
-gulp.task('default', ['clean', 'build']);
+gulp.task('default', ['build']);

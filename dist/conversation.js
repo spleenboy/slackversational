@@ -11,20 +11,18 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var EventEmitter = require('events');
 var _ = require('lodash');
 var Promise = require('bluebird');
-var Typist = require('./typist');
 var Trickle = require('./trickle');
 var log = require('./logger');
 
 module.exports = function (_EventEmitter) {
     _inherits(Conversation, _EventEmitter);
 
-    function Conversation(id, client) {
+    function Conversation(id) {
         _classCallCheck(this, Conversation);
 
         var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Conversation).call(this));
 
         _this.id = id || _.uniqueId();
-        _this.client = client;
         _this.requests = [];
         _this.topic = {};
         _this.step = 0;
@@ -34,12 +32,18 @@ module.exports = function (_EventEmitter) {
 
     _createClass(Conversation, [{
         key: 'say',
-        value: function say(channelId, statements) {
+        value: function say(channel, statements) {
+            var _this2 = this;
+
             if (!_.isArray(statements)) {
                 statements = [statements];
             }
-            var typist = new Typist(statements, this.trickle);
-            typist.send(this.client, channelId);
+            var text = undefined;
+            while (text = statements.shift()) {
+                this.trickle.add(function () {
+                    _this2.emit('say', { text: text, channel: channel });
+                });
+            }
         }
     }, {
         key: 'callAction',
@@ -70,7 +74,7 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'process',
         value: function process(exchange) {
-            var _this2 = this;
+            var _this3 = this;
 
             var request = this.currentRequest();
 
@@ -87,19 +91,19 @@ module.exports = function (_EventEmitter) {
                 return handle(request, exchange);
             }).then(function () {
                 if (exchange.output) {
-                    _this2.emit('saying', request, exchange);
-                    _this2.say(exchange.input.channel, exchange.output);
+                    _this3.emit('saying', request, exchange);
+                    _this3.say(exchange.input.channel, exchange.output);
                 }
 
                 if (exchange.ended) {
-                    _this2.end();
+                    _this3.end();
                     return;
                 }
 
                 // If the request has changed, process the new one, too
-                var newRequest = _this2.currentRequest();
+                var newRequest = _this3.currentRequest();
                 if (newRequest && request !== newRequest) {
-                    _this2.process(exchange);
+                    _this3.process(exchange);
                 }
             });
         }
@@ -111,7 +115,7 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'chain',
         value: function chain() {
-            var _this3 = this;
+            var _this4 = this;
 
             for (var _len = arguments.length, requests = Array(_len), _key = 0; _key < _len; _key++) {
                 requests[_key] = arguments[_key];
@@ -120,11 +124,11 @@ module.exports = function (_EventEmitter) {
             var current = requests.shift();
 
             var _loop = function _loop() {
-                _this3.addRequest(current);
+                _this4.addRequest(current);
                 var next = requests.shift();
                 if (next) {
                     current.on('valid', function (x) {
-                        _this3.setRequest(function (r) {
+                        _this4.setRequest(function (r) {
                             return r === next;
                         });
                     });
@@ -148,7 +152,7 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'setRequest',
         value: function setRequest(test) {
-            var _this4 = this;
+            var _this5 = this;
 
             if (_.isInteger(test)) {
                 this.step = _.clamp(test, 0, this.requests.length = 1);
@@ -156,7 +160,7 @@ module.exports = function (_EventEmitter) {
             }
             this.requests.some(function (request, i) {
                 if (test(request)) {
-                    _this4.step = i;
+                    _this5.step = i;
                     return true;
                 }
                 return false;
@@ -188,7 +192,7 @@ module.exports = function (_EventEmitter) {
     }], [{
         key: 'emits',
         get: function get() {
-            return ['preparing', 'reading', 'asking', 'saying', 'error', 'end'];
+            return ['preparing', 'reading', 'asking', 'saying', 'say', 'error', 'end'];
         }
     }]);
 

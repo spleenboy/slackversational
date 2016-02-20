@@ -17,16 +17,6 @@ module.exports = function () {
     }
 
     _createClass(SlackClient, [{
-        key: "getChannelById",
-        value: function getChannelById(id) {
-            return this.client.dataStore.getChannelGroupOrDMById(id);
-        }
-    }, {
-        key: "getUserById",
-        value: function getUserById(id) {
-            return this.client.dataStore.getUserById(id);
-        }
-    }, {
         key: "sendMessageToChannel",
         value: function sendMessageToChannel(message, channelId, callback) {
             this.client.sendMessage(message, channelId, callback);

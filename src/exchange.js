@@ -4,12 +4,9 @@ const log = require('./logger');
 const StatementPool = require('./statement-pool');
 
 module.exports = class Exchange {
-    constructor(input, slack) {
+    constructor(input) {
         // The original input
         this.input = input;
-
-        // The slack client
-        this.slack = slack;
 
         // Stores the current topic of conversation
         this.topic = {};
@@ -27,22 +24,21 @@ module.exports = class Exchange {
         this.output = [];
     }
 
-
-    get channel() {
-        if (!this._channel) {
-            this._channel = this.slack.getChannelById(this.input.channel);
-        }
-        return this._channel;
+    static get DM() {
+        return 'D';
     }
 
-
-    get user() {
-        if (!this._user) {
-            this._user = this.slack.getUserById(this.input.user);
-        }
-        return this._user;
+    static get CHANNEL() {
+        return 'C';
     }
 
+    static get GROUP() {
+        return 'G';
+    }
+
+    get type() {
+        return this.input && this.input.channel.substr(0, 1);
+    }
 
     write(statements) {
         const pool = new StatementPool(statements);

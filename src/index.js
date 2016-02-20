@@ -9,7 +9,6 @@ module.exports = {
     StatementPool: require('./statement-pool'),
     Storage: require('./storage'),
     Trickle: require('./trickle'),
-    Typist: require('./typist'),
     Parsers: require('./parsers/'),
     Validators: require('./validators/'),
 };

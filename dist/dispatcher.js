@@ -26,9 +26,10 @@ module.exports = function (_EventEmitter) {
 
         var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Dispatcher).call(this));
 
+        _this.slack = slack;
         _this.storage = storage || new Storage();
         _this.exclude = null;
-        _this.listen(slack);
+        _this.listen();
         return _this;
     }
 
@@ -38,6 +39,7 @@ module.exports = function (_EventEmitter) {
             var _this2 = this;
 
             if (this.exclude && this.exclude(exchange)) {
+                log.debug("Excluded exchange from", exchange.input.channel);
                 this.emit('excluded', exchange);
                 return;
             }
@@ -60,9 +62,15 @@ module.exports = function (_EventEmitter) {
             });
         }
     }, {
+        key: 'say',
+        value: function say(msg) {
+            log.debug("Sending message", msg);
+            this.slack.sendMessageToChannel(msg.text, msg.channel);
+        }
+    }, {
         key: 'create',
         value: function create(exchange) {
-            return new Conversation(exchange.input.channel);
+            return new Conversation(exchange.input.channel, this.slack);
         }
     }, {
         key: 'start',
@@ -73,6 +81,7 @@ module.exports = function (_EventEmitter) {
             return create(exchange).then(function (conversation) {
                 _this3.emit('start', conversation, exchange);
                 conversation.on('end', _this3.ended.bind(_this3, conversation));
+                conversation.on('say', _this3.say.bind(_this3));
                 return _this3.storage.add(conversation.id, conversation);
             });
         }
@@ -83,13 +92,12 @@ module.exports = function (_EventEmitter) {
         }
     }, {
         key: 'listen',
-        value: function listen(slack) {
+        value: function listen() {
             var _this4 = this;
 
-            this.slack = new SlackClient(slack);
-            slack.onMessage(function (input) {
+            this.slack.onMessage(function (input) {
                 try {
-                    var exchange = new Exchange(input, _this4.slack);
+                    var exchange = new Exchange(input);
                     _this4.dispatch(exchange);
                 } catch (e) {
                     log.error("Error dispatching exchange", e);

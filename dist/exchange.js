@@ -8,14 +8,11 @@ var log = require('./logger');
 var StatementPool = require('./statement-pool');
 
 module.exports = function () {
-    function Exchange(input, slack) {
+    function Exchange(input) {
         _classCallCheck(this, Exchange);
 
         // The original input
         this.input = input;
-
-        // The slack client
-        this.slack = slack;
 
         // Stores the current topic of conversation
         this.topic = {};
@@ -46,20 +43,24 @@ module.exports = function () {
             return values;
         }
     }, {
-        key: 'channel',
+        key: 'type',
         get: function get() {
-            if (!this._channel) {
-                this._channel = this.slack.getChannelById(this.input.channel);
-            }
-            return this._channel;
+            return this.input && this.input.channel.substr(0, 1);
+        }
+    }], [{
+        key: 'DM',
+        get: function get() {
+            return 'D';
         }
     }, {
-        key: 'user',
+        key: 'CHANNEL',
         get: function get() {
-            if (!this._user) {
-                this._user = this.slack.getUserById(this.input.user);
-            }
-            return this._user;
+            return 'C';
+        }
+    }, {
+        key: 'GROUP',
+        get: function get() {
+            return 'G';
         }
     }]);
 

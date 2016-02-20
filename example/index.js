@@ -6,7 +6,7 @@ const Talker = require('../dist/');
 const slack = Talker.SlackClient.create(secret.token);
 const dispatcher = new Talker.Dispatcher(slack);
 
-dispatcher.exclude = (message) => !message.channel.is_im;
+dispatcher.exclude = (exchange) => exchange.type !== Talker.Exchange.DM;
 
 dispatcher.on('start', (conversation, message) => {
     console.log("Conversation started based on message", message.input.text);

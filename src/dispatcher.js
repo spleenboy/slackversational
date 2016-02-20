@@ -11,14 +11,16 @@ const log = require('./logger');
 module.exports = class Dispatcher extends EventEmitter {
     constructor(slack, storage = null) {
         super();
+        this.slack = slack;
         this.storage = storage || new Storage();
         this.exclude = null;
-        this.listen(slack);
+        this.listen();
     }
 
 
     dispatch(exchange) {
         if (this.exclude && this.exclude(exchange)) {
+            log.debug("Excluded exchange from", exchange.input.channel);
             this.emit('excluded', exchange);
             return;
         }
@@ -43,8 +45,13 @@ module.exports = class Dispatcher extends EventEmitter {
         });
     }
 
+    say(msg) {
+        log.debug("Sending message", msg);
+        this.slack.sendMessageToChannel(msg.text, msg.channel);
+    }
+
     create(exchange) {
-        return new Conversation(exchange.input.channel);
+        return new Conversation(exchange.input.channel, this.slack);
     }
 
     start(exchange) {
@@ -52,6 +59,7 @@ module.exports = class Dispatcher extends EventEmitter {
         return create(exchange).then((conversation) => {
             this.emit('start', conversation, exchange)
             conversation.on('end', this.ended.bind(this, conversation));
+            conversation.on('say', this.say.bind(this));
             return this.storage.add(conversation.id, conversation)
         });
     }
@@ -62,11 +70,10 @@ module.exports = class Dispatcher extends EventEmitter {
     }
 
 
-    listen(slack) {
-        this.slack = new SlackClient(slack);
-        slack.onMessage((input) => {
+    listen() {
+        this.slack.onMessage((input) => {
             try {
-                const exchange = new Exchange(input, this.slack);
+                const exchange = new Exchange(input);
                 this.dispatch(exchange);
             } catch (e) {
                 log.error("Error dispatching exchange", e);

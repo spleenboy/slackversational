@@ -18,14 +18,6 @@ module.exports = class SlackClient {
         return new SlackClient(rtm);
     }
 
-    getChannelById(id) {
-        return this.client.dataStore.getChannelGroupOrDMById(id);
-    }
-
-    getUserById(id) {
-        return this.client.dataStore.getUserById(id);
-    }
-
     sendMessageToChannel(message, channelId, callback) {
         this.client.sendMessage(message, channelId, callback);
     }

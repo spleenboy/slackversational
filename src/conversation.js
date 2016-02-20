@@ -3,15 +3,13 @@
 const EventEmitter = require('events');
 const _ = require('lodash');
 const Promise = require('bluebird');
-const Typist = require('./typist');
 const Trickle = require('./trickle');
 const log = require('./logger');
 
 module.exports = class Conversation extends EventEmitter {
-    constructor(id, client) {
+    constructor(id) {
         super();
         this.id = id || _.uniqueId();
-        this.client = client;
         this.requests = [];
         this.topic = {};
         this.step = 0;
@@ -19,15 +17,19 @@ module.exports = class Conversation extends EventEmitter {
     }
 
     static get emits() {
-        return ['preparing', 'reading', 'asking', 'saying', 'error', 'end'];
+        return ['preparing', 'reading', 'asking', 'saying', 'say', 'error', 'end'];
     }
 
-    say(channelId, statements) {
+    say(channel, statements) {
         if (!_.isArray(statements)) {
             statements = [statements];
         }
-        const typist = new Typist(statements, this.trickle);
-        typist.send(this.client, channelId);
+        let text;
+        while (text = statements.shift()) {
+            this.trickle.add(() => {
+                this.emit('say', {text, channel});
+            });
+        }
     }
 
 
