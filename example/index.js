@@ -1,15 +1,31 @@
 "use strict";
 
+const slack = require('slack-client');
 const secret = require('./secret.json');
-const Talker = require('../dist/');
+const Talker = require('../index');
 
-const slack = Talker.SlackClient.create(secret.token);
-const dispatcher = new Talker.Dispatcher(slack);
+const client = new slack.RtmClient(secret.token);
+const dispatcher = new Talker.Dispatcher();
+
+// You must implement message dispatching
+client.on(slack.RTM_EVENTS.MESSAGE, dispatcher.messageHandler);
 
 dispatcher.exclude = (exchange) => exchange.type !== Talker.Exchange.DM;
 
 dispatcher.on('start', (conversation, message) => {
     console.log("Conversation started based on message", message.input.text);
+
+    conversation.on('saying', (request, msg) => {
+        console.log("saying", msg.output);
+    });
+
+    // You must implement an event handler for the conversation's
+    // `say` event. Actual message sending is not handled by this module.
+    // Instead, the conversation handles the timing of message sending.
+    conversation.on('say', (msg) => {
+        console.log("say", msg);
+        client.sendMessage(msg.text, msg.channel);
+    });
 
     // You can short circuit the conversation request by setting the
     // exchange.valid value to false when processing first begins.
@@ -48,10 +64,6 @@ dispatcher.on('start', (conversation, message) => {
         conversation.end();
     });
     conversation.addRequest(getWhen);
-
-    conversation.on('saying', (request, msg) => {
-        console.log("saying", msg.output);
-    });
 });
 
-slack.start();
+client.start();

@@ -33,16 +33,13 @@ module.exports = function (_EventEmitter) {
     _createClass(Conversation, [{
         key: 'say',
         value: function say(channel, statements) {
-            var _this2 = this;
-
             if (!_.isArray(statements)) {
                 statements = [statements];
             }
             var text = undefined;
             while (text = statements.shift()) {
-                this.trickle.add(function () {
-                    _this2.emit('say', { text: text, channel: channel });
-                });
+                var msg = { text: text, channel: channel };
+                this.trickle.add(this.emit.bind(this, 'say', msg));
             }
         }
     }, {
@@ -74,7 +71,7 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'process',
         value: function process(exchange) {
-            var _this3 = this;
+            var _this2 = this;
 
             var request = this.currentRequest();
 
@@ -91,19 +88,19 @@ module.exports = function (_EventEmitter) {
                 return handle(request, exchange);
             }).then(function () {
                 if (exchange.output) {
-                    _this3.emit('saying', request, exchange);
-                    _this3.say(exchange.input.channel, exchange.output);
+                    _this2.emit('saying', request, exchange);
+                    _this2.say(exchange.input.channel, exchange.output);
                 }
 
                 if (exchange.ended) {
-                    _this3.end();
+                    _this2.end();
                     return;
                 }
 
                 // If the request has changed, process the new one, too
-                var newRequest = _this3.currentRequest();
+                var newRequest = _this2.currentRequest();
                 if (newRequest && request !== newRequest) {
-                    _this3.process(exchange);
+                    _this2.process(exchange);
                 }
             });
         }
@@ -115,7 +112,7 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'chain',
         value: function chain() {
-            var _this4 = this;
+            var _this3 = this;
 
             for (var _len = arguments.length, requests = Array(_len), _key = 0; _key < _len; _key++) {
                 requests[_key] = arguments[_key];
@@ -124,11 +121,11 @@ module.exports = function (_EventEmitter) {
             var current = requests.shift();
 
             var _loop = function _loop() {
-                _this4.addRequest(current);
+                _this3.addRequest(current);
                 var next = requests.shift();
                 if (next) {
                     current.on('valid', function (x) {
-                        _this4.setRequest(function (r) {
+                        _this3.setRequest(function (r) {
                             return r === next;
                         });
                     });
@@ -152,7 +149,7 @@ module.exports = function (_EventEmitter) {
     }, {
         key: 'setRequest',
         value: function setRequest(test) {
-            var _this5 = this;
+            var _this4 = this;
 
             if (_.isInteger(test)) {
                 this.step = _.clamp(test, 0, this.requests.length = 1);
@@ -160,7 +157,7 @@ module.exports = function (_EventEmitter) {
             }
             this.requests.some(function (request, i) {
                 if (test(request)) {
-                    _this5.step = i;
+                    _this4.step = i;
                     return true;
                 }
                 return false;

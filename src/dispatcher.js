@@ -5,20 +5,24 @@ const Promise = require('bluebird');
 const Storage = require('./storage');
 const Conversation = require('./conversation');
 const Exchange = require('./exchange');
-const SlackClient = require('./slack-client');
 const log = require('./logger');
 
 module.exports = class Dispatcher extends EventEmitter {
-    constructor(slack, storage = null) {
+    constructor(storage = null) {
         super();
-        this.slack = slack;
         this.storage = storage || new Storage();
         this.exclude = null;
-        this.listen();
     }
 
 
-    dispatch(exchange) {
+    // Utility for getting a context-bound dispatch function
+    get messageHandler() {
+        return this.dispatch.bind(this);
+    }
+
+
+    dispatch(input) {
+        const exchange = new Exchange(input);
         if (this.exclude && this.exclude(exchange)) {
             log.debug("Excluded exchange from", exchange.input.channel);
             this.emit('excluded', exchange);
@@ -45,13 +49,8 @@ module.exports = class Dispatcher extends EventEmitter {
         });
     }
 
-    say(msg) {
-        log.debug("Sending message", msg);
-        this.slack.sendMessageToChannel(msg.text, msg.channel);
-    }
-
     create(exchange) {
-        return new Conversation(exchange.input.channel, this.slack);
+        return new Conversation(exchange.input.channel);
     }
 
     start(exchange) {
@@ -59,7 +58,6 @@ module.exports = class Dispatcher extends EventEmitter {
         return create(exchange).then((conversation) => {
             this.emit('start', conversation, exchange)
             conversation.on('end', this.ended.bind(this, conversation));
-            conversation.on('say', this.say.bind(this));
             return this.storage.add(conversation.id, conversation)
         });
     }
@@ -67,17 +65,5 @@ module.exports = class Dispatcher extends EventEmitter {
 
     ended(conversation) {
         return this.storage.removeById(conversation.id);
-    }
-
-
-    listen() {
-        this.slack.onMessage((input) => {
-            try {
-                const exchange = new Exchange(input);
-                this.dispatch(exchange);
-            } catch (e) {
-                log.error("Error dispatching exchange", e);
-            }
-        });
     }
 }

@@ -26,9 +26,8 @@ module.exports = class Conversation extends EventEmitter {
         }
         let text;
         while (text = statements.shift()) {
-            this.trickle.add(() => {
-                this.emit('say', {text, channel});
-            });
+            const msg = {text, channel};
+            this.trickle.add(this.emit.bind(this, 'say', msg));
         }
     }
 

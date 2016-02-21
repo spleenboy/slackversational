@@ -13,31 +13,31 @@ var Promise = require('bluebird');
 var Storage = require('./storage');
 var Conversation = require('./conversation');
 var Exchange = require('./exchange');
-var SlackClient = require('./slack-client');
 var log = require('./logger');
 
 module.exports = function (_EventEmitter) {
     _inherits(Dispatcher, _EventEmitter);
 
-    function Dispatcher(slack) {
-        var storage = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+    function Dispatcher() {
+        var storage = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
         _classCallCheck(this, Dispatcher);
 
         var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Dispatcher).call(this));
 
-        _this.slack = slack;
         _this.storage = storage || new Storage();
         _this.exclude = null;
-        _this.listen();
         return _this;
     }
 
+    // Utility for getting a context-bound dispatch function
+
     _createClass(Dispatcher, [{
         key: 'dispatch',
-        value: function dispatch(exchange) {
+        value: function dispatch(input) {
             var _this2 = this;
 
+            var exchange = new Exchange(input);
             if (this.exclude && this.exclude(exchange)) {
                 log.debug("Excluded exchange from", exchange.input.channel);
                 this.emit('excluded', exchange);
@@ -62,15 +62,9 @@ module.exports = function (_EventEmitter) {
             });
         }
     }, {
-        key: 'say',
-        value: function say(msg) {
-            log.debug("Sending message", msg);
-            this.slack.sendMessageToChannel(msg.text, msg.channel);
-        }
-    }, {
         key: 'create',
         value: function create(exchange) {
-            return new Conversation(exchange.input.channel, this.slack);
+            return new Conversation(exchange.input.channel);
         }
     }, {
         key: 'start',
@@ -81,7 +75,6 @@ module.exports = function (_EventEmitter) {
             return create(exchange).then(function (conversation) {
                 _this3.emit('start', conversation, exchange);
                 conversation.on('end', _this3.ended.bind(_this3, conversation));
-                conversation.on('say', _this3.say.bind(_this3));
                 return _this3.storage.add(conversation.id, conversation);
             });
         }
@@ -91,18 +84,9 @@ module.exports = function (_EventEmitter) {
             return this.storage.removeById(conversation.id);
         }
     }, {
-        key: 'listen',
-        value: function listen() {
-            var _this4 = this;
-
-            this.slack.onMessage(function (input) {
-                try {
-                    var exchange = new Exchange(input);
-                    _this4.dispatch(exchange);
-                } catch (e) {
-                    log.error("Error dispatching exchange", e);
-                }
-            });
+        key: 'messageHandler',
+        get: function get() {
+            return this.dispatch.bind(this);
         }
     }]);
 

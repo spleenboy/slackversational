@@ -1,14 +1,13 @@
 "use strict";
 
 module.exports = {
-    Conversation: require('./conversation'),
-    Dispatcher: require('./dispatcher'),
-    Exchange: require('./exchange'),
-    Request: require('./request'),
-    SlackClient: require('./slack-client'),
-    StatementPool: require('./statement-pool'),
-    Storage: require('./storage'),
-    Trickle: require('./trickle'),
-    Parsers: require('./parsers/'),
-    Validators: require('./validators/')
+    Conversation: require('./dist/conversation'),
+    Dispatcher: require('./dist/dispatcher'),
+    Exchange: require('./dist/exchange'),
+    Request: require('./dist/request'),
+    StatementPool: require('./dist/statement-pool'),
+    Storage: require('./dist/storage'),
+    Trickle: require('./dist/trickle'),
+    Parsers: require('./dist/parsers/'),
+    Validators: require('./dist/validators/')
 };
