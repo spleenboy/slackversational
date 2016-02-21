@@ -15,10 +15,6 @@ dispatcher.exclude = (exchange) => exchange.type !== Talker.Exchange.DM;
 dispatcher.on('start', (conversation, message) => {
     console.log("Conversation started based on message", message.input.text);
 
-    conversation.on('saying', (request, msg) => {
-        console.log("saying", msg.output);
-    });
-
     // You must implement an event handler for the conversation's
     // `say` event. Actual message sending is not handled by this module.
     // Instead, the conversation handles the timing of message sending.
@@ -28,7 +24,7 @@ dispatcher.on('start', (conversation, message) => {
     });
 
     // You can short circuit the conversation request by setting the
-    // exchange.valid value to false when processing first begins.
+    // exchange.ended value to false when processing first begins.
     conversation.on('preparing', (request, exchange) => {
         if (exchange.input.text === "cancel") {
             exchange.ended = true;

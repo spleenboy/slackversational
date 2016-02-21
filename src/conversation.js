@@ -20,13 +20,10 @@ module.exports = class Conversation extends EventEmitter {
         return ['preparing', 'reading', 'asking', 'saying', 'say', 'error', 'end'];
     }
 
-    say(channel, statements) {
-        if (!_.isArray(statements)) {
-            statements = [statements];
-        }
-        let text;
-        while (text = statements.shift()) {
-            const msg = {text, channel};
+    say(request, exchange) {
+        this.emit('saying', request, exchange);
+        let msg;
+        while (msg = exchange.output.shift()) {
             this.trickle.add(this.emit.bind(this, 'say', msg));
         }
     }
@@ -75,8 +72,7 @@ module.exports = class Conversation extends EventEmitter {
         .then(() => handle(request, exchange))
         .then(() => {
             if (exchange.output) {
-                this.emit('saying', request, exchange);
-                this.say(exchange.input.channel, exchange.output);
+                this.say(request, exchange);
             }
 
             if (exchange.ended) {

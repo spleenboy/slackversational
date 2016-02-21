@@ -20,7 +20,7 @@ module.exports = class Exchange {
         // Whether the exchange was abandoned completely
         this.ended = false;
 
-        // The statements to use as a response
+        // The message objects to used as a response
         this.output = [];
     }
 
@@ -40,12 +40,13 @@ module.exports = class Exchange {
         return this.input && this.input.channel.substr(0, 1);
     }
 
-    write(statements) {
+    write(statements, channel = null) {
+        if (!channel) channel = this.input.channel;
         const pool = new StatementPool(statements);
-        const values = pool.bind(this);
-        values.forEach((value) => {
-            value.length && this.output.push(value);
+        const texts = pool.bind(this);
+        texts.forEach((text) => {
+            const msg = {text, channel};
+            text.length && this.output.push(msg);
         });
-        return values;
     }
 }

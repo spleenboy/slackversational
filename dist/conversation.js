@@ -32,13 +32,10 @@ module.exports = function (_EventEmitter) {
 
     _createClass(Conversation, [{
         key: 'say',
-        value: function say(channel, statements) {
-            if (!_.isArray(statements)) {
-                statements = [statements];
-            }
-            var text = undefined;
-            while (text = statements.shift()) {
-                var msg = { text: text, channel: channel };
+        value: function say(request, exchange) {
+            this.emit('saying', request, exchange);
+            var msg = undefined;
+            while (msg = exchange.output.shift()) {
                 this.trickle.add(this.emit.bind(this, 'say', msg));
             }
         }
@@ -88,8 +85,7 @@ module.exports = function (_EventEmitter) {
                 return handle(request, exchange);
             }).then(function () {
                 if (exchange.output) {
-                    _this2.emit('saying', request, exchange);
-                    _this2.say(exchange.input.channel, exchange.output);
+                    _this2.say(request, exchange);
                 }
 
                 if (exchange.ended) {
