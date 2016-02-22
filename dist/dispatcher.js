@@ -18,8 +18,8 @@ var log = require('./logger');
 module.exports = function (_EventEmitter) {
     _inherits(Dispatcher, _EventEmitter);
 
-    function Dispatcher(slack) {
-        var storage = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+    function Dispatcher() {
+        var storage = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
         _classCallCheck(this, Dispatcher);
 
@@ -27,16 +27,19 @@ module.exports = function (_EventEmitter) {
 
         _this.storage = storage || new Storage();
         _this.exclude = null;
-        _this.listen(slack);
         return _this;
     }
 
+    // Utility for getting a context-bound dispatch function
+
     _createClass(Dispatcher, [{
         key: 'dispatch',
-        value: function dispatch(exchange) {
+        value: function dispatch(input) {
             var _this2 = this;
 
+            var exchange = new Exchange(input);
             if (this.exclude && this.exclude(exchange)) {
+                log.debug("Excluded exchange from", exchange.input.channel);
                 this.emit('excluded', exchange);
                 return;
             }
@@ -81,19 +84,9 @@ module.exports = function (_EventEmitter) {
             return this.storage.removeById(conversation.id);
         }
     }, {
-        key: 'listen',
-        value: function listen(slack) {
-            var _this4 = this;
-
-            this.slack = slack;
-            slack.on('message', function (input) {
-                try {
-                    var exchange = new Exchange(input, slack);
-                    _this4.dispatch(exchange);
-                } catch (e) {
-                    log.error("Error dispatching exchange", e);
-                }
-            });
+        key: 'messageHandler',
+        get: function get() {
+            return this.dispatch.bind(this);
         }
     }]);
 

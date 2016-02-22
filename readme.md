@@ -1,21 +1,47 @@
 # slackversational
 > A helper module for handling the plumbing of a Slack bot that uses [node-slack-client](https://github.com/slackhq/node-slack-client).
 
+```
+Incoming Message
+       |
+       |
+      \|/
+   Dispatcher (Examines message and routes to appropriate conversation)
+       |
+      \|/
+    Exchange (Encapsulates incoming message and output. Passed to conversation.)
+       |
+       |-----> Conversation (Selects appropriate request for processing.)
+                  |
+                  |----> Request (Processes exchange. Asks or responds.)
+                            |
+                            |----> Processors (Parse and validate exchange input.)
+```
+
 
 ## Dispatcher
-The `Dispatcher` listens for messages and funnels the message from each channel to a separate conversation. This is typically the entry point for your custom implementation.
+The `Dispatcher` funnels messages to separate conversations based on the channel. This is typically the entry point for your custom implementation.
 
 The constructor takes two arguments. The first is the slack client. The second is a `Storage` instance. This object is used internall by the dispatcher to keep track of all conversations. Conversations are stored and retrieved from the storage object by the channel id.
 
 ```javascript
-const dispatcher = new Dispatcher(slack);
+const rtmClient = new Slack.RtmClient(secretToken);
+const dispatcher = new Dispatcher();
+
+rtmClient.on(Slack.RTM_EVENTS.MESSAGE, dispatcher.messageHandler);
+
 dispatcher.on('start', (conversation, exchange) => {
     // Initialize the conversation
+    conversation.on('say', (msg) => {
+        rtmClient.sendMessage(msg.text, msg.channel);
+    });
 });
+
 dispatcher.on('end', (conversation, exchange) => {
     // Handle the conversation ending
 });
-slack.login();
+
+rtmClient.start();
 ```
 
 

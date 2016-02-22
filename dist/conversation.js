@@ -11,7 +11,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var EventEmitter = require('events');
 var _ = require('lodash');
 var Promise = require('bluebird');
-var Typist = require('./typist');
 var Trickle = require('./trickle');
 var log = require('./logger');
 
@@ -33,12 +32,12 @@ module.exports = function (_EventEmitter) {
 
     _createClass(Conversation, [{
         key: 'say',
-        value: function say(channel, statements) {
-            if (!_.isArray(statements)) {
-                statements = [statements];
+        value: function say(request, exchange) {
+            this.emit('saying', request, exchange);
+            var msg = undefined;
+            while (msg = exchange.output.shift()) {
+                this.trickle.add(this.emit.bind(this, 'say', msg));
             }
-            var typist = new Typist(statements, this.trickle);
-            typist.send(channel);
         }
     }, {
         key: 'callAction',
@@ -86,8 +85,7 @@ module.exports = function (_EventEmitter) {
                 return handle(request, exchange);
             }).then(function () {
                 if (exchange.output) {
-                    _this2.emit('saying', request, exchange);
-                    _this2.say(exchange.channel, exchange.output);
+                    _this2.say(request, exchange);
                 }
 
                 if (exchange.ended) {
@@ -187,7 +185,7 @@ module.exports = function (_EventEmitter) {
     }], [{
         key: 'emits',
         get: function get() {
-            return ['preparing', 'reading', 'asking', 'saying', 'error', 'end'];
+            return ['preparing', 'reading', 'asking', 'saying', 'say', 'error', 'end'];
         }
     }]);
 

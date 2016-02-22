@@ -44,9 +44,7 @@ var Trickle = function (_EventEmitter) {
                 return;
             }
 
-            var next = this.queue.shift();
-            next();
-
+            this.queue.shift()();
             this.timer = setTimeout(this.run.bind(this), this.delay);
         }
     }]);

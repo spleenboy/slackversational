@@ -26,9 +26,7 @@ class Trickle extends EventEmitter {
             return;
         }
 
-        const next = this.queue.shift();
-        next();
-
+        this.queue.shift()();
         this.timer = setTimeout(this.run.bind(this), this.delay);
     }
 }

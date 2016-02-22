@@ -8,14 +8,11 @@ var log = require('./logger');
 var StatementPool = require('./statement-pool');
 
 module.exports = function () {
-    function Exchange(input, slack) {
+    function Exchange(input) {
         _classCallCheck(this, Exchange);
 
         // The original input
         this.input = input;
-
-        // The slack client
-        this.slack = slack;
 
         // Stores the current topic of conversation
         this.topic = {};
@@ -29,7 +26,7 @@ module.exports = function () {
         // Whether the exchange was abandoned completely
         this.ended = false;
 
-        // The statements to use as a response
+        // The message objects to used as a response
         this.output = [];
     }
 
@@ -38,28 +35,35 @@ module.exports = function () {
         value: function write(statements) {
             var _this = this;
 
+            var channel = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+
+            if (!channel) channel = this.input.channel;
             var pool = new StatementPool(statements);
-            var values = pool.bind(this);
-            values.forEach(function (value) {
-                value.length && _this.output.push(value);
+            var texts = pool.bind(this);
+            texts.forEach(function (text) {
+                var msg = { text: text, channel: channel };
+                text.length && _this.output.push(msg);
             });
-            return values;
         }
     }, {
-        key: 'channel',
+        key: 'type',
         get: function get() {
-            if (!this._channel) {
-                this._channel = this.slack.getChannelGroupOrDMByID(this.input.channel);
-            }
-            return this._channel;
+            return this.input && this.input.channel.substr(0, 1);
+        }
+    }], [{
+        key: 'DM',
+        get: function get() {
+            return 'D';
         }
     }, {
-        key: 'user',
+        key: 'CHANNEL',
         get: function get() {
-            if (!this._user) {
-                this._user = this.slack.getUserByID(this.input.user);
-            }
-            return this._user;
+            return 'C';
+        }
+    }, {
+        key: 'GROUP',
+        get: function get() {
+            return 'G';
         }
     }]);
 
