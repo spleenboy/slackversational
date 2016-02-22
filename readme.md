@@ -6,22 +6,16 @@ Incoming Message
        |
        |
       \|/
-   Dispatcher 
+   Dispatcher (Examines message and routes to appropriate conversation)
        |
       \|/
-    Exchange
+    Exchange (Encapsulates incoming message and output. Passed to conversation.)
        |
-       |-----> Conversation
-       |          |
-       |          |----> Request
-       |          |
-       |          |----> Request
-       |
-       |-----> Conversation
+       |-----> Conversation (Selects appropriate request for processing.)
                   |
-                  |----> Request
-                  |
-                  |----> Request
+                  |----> Request (Processes exchange. Asks or responds.)
+                            |
+                            |----> Processors (Parse and validate exchange input.)
 ```
 
 
